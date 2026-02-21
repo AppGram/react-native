@@ -1,117 +1,280 @@
-/**
- * WishCard Component
- *
- * A card displaying a wish/feature request with Hazel design system styling.
- */
-
 import React from 'react'
-import { View, Text, TouchableOpacity, type ViewStyle } from 'react-native'
+import { TouchableOpacity, View, Text, type ViewStyle } from 'react-native'
+import {
+  ArrowBigUp,
+  MessageSquare,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+} from 'lucide-react-native'
 import { useAppgramTheme } from '../../provider'
-import { Badge } from '../base'
-import { VoteButton } from './VoteButton'
 import type { Wish } from '../../types'
 
 export interface WishCardProps {
   wish: Wish
   onPress?: (wish: Wish) => void
-  onVoteChange?: (wishId: string, hasVoted: boolean, newCount: number) => void
-  showStatus?: boolean
-  showCategory?: boolean
+  onVote?: (wishId: string) => void
+  onCommentPress?: (wish: Wish) => void
   style?: ViewStyle
 }
 
-const STATUS_VARIANTS: Record<string, 'default' | 'success' | 'warning' | 'info'> = {
-  pending: 'default',
-  planned: 'info',
-  in_progress: 'warning',
-  completed: 'success',
+// Status configuration matching web
+const STATUS_CONFIG: Record<string, {
+  icon: typeof Clock
+  label: string
+  variant: 'default' | 'secondary' | 'outline'
+}> = {
+  pending: { icon: Clock, label: 'New', variant: 'secondary' },
+  under_review: { icon: AlertCircle, label: 'Reviewing', variant: 'outline' },
+  planned: { icon: Clock, label: 'Planned', variant: 'outline' },
+  in_progress: { icon: AlertCircle, label: 'In Progress', variant: 'default' },
+  completed: { icon: CheckCircle2, label: 'Shipped', variant: 'default' },
+  declined: { icon: AlertCircle, label: 'Closed', variant: 'secondary' },
 }
 
+/**
+ * WishCard Component
+ *
+ * A card displaying a wish/feature request with voting and status.
+ *
+ * @example
+ * ```tsx
+ * import { WishCard } from '@appgram/react-native'
+ *
+ * function WishItem({ wish }) {
+ *   return (
+ *     <WishCard
+ *       wish={wish}
+ *       onPress={(w) => navigation.navigate('WishDetail', { id: w.id })}
+ *       onVote={(wishId) => console.log('Voted on:', wishId)}
+ *       onCommentPress={(w) => navigation.navigate('Comments', { wishId: w.id })}
+ *     />
+ *   )
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // In a FlatList
+ * <FlatList
+ *   data={wishes}
+ *   renderItem={({ item }) => (
+ *     <WishCard wish={item} onPress={handlePress} />
+ *   )}
+ *   keyExtractor={(item) => item.id}
+ * />
+ * ```
+ */
 export function WishCard({
   wish,
   onPress,
-  onVoteChange,
-  showStatus = true,
-  showCategory = true,
+  onVote,
+  onCommentPress,
   style,
 }: WishCardProps): React.ReactElement {
   const { colors, radius, typography, spacing } = useAppgramTheme()
 
-  const containerStyle: ViewStyle = {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: colors.border,
+  const [localVote, setLocalVote] = React.useState({
+    hasVoted: wish.has_voted || false,
+    count: wish.vote_count || 0,
+  })
+
+  React.useEffect(() => {
+    setLocalVote({
+      hasVoted: wish.has_voted || false,
+      count: wish.vote_count || 0,
+    })
+  }, [wish.has_voted, wish.vote_count])
+
+  const handleVote = () => {
+    setLocalVote((prev) => ({
+      hasVoted: !prev.hasVoted,
+      count: prev.hasVoted ? prev.count - 1 : prev.count + 1,
+    }))
+    onVote?.(wish.id)
   }
 
   const handlePress = () => {
     onPress?.(wish)
   }
 
-  const handleVoteChange = (hasVoted: boolean, newCount: number) => {
-    onVoteChange?.(wish.id, hasVoted, newCount)
+  const handleCommentPress = () => {
+    onCommentPress?.(wish)
   }
 
-  const statusLabel = wish.status?.replace('_', ' ') || 'pending'
+  const status = STATUS_CONFIG[wish.status] || STATUS_CONFIG.pending
+  const StatusIcon = status.icon
+
+  // Badge colors based on variant
+  const getBadgeStyles = () => {
+    switch (status.variant) {
+      case 'default':
+        return {
+          bg: colors.primary,
+          text: '#FFFFFF',
+        }
+      case 'outline':
+        return {
+          bg: 'transparent',
+          text: colors.foreground,
+          border: colors.border,
+        }
+      case 'secondary':
+      default:
+        return {
+          bg: colors.muted,
+          text: colors.foreground,
+        }
+    }
+  }
+
+  const badgeStyles = getBadgeStyles()
+
+  const authorName = wish.author?.name || wish.author_email?.split('@')[0] || 'Anonymous'
 
   return (
     <TouchableOpacity
       onPress={handlePress}
-      disabled={!onPress}
-      activeOpacity={onPress ? 0.7 : 1}
-      style={[containerStyle, style]}
+      activeOpacity={0.7}
+      style={[
+        {
+          backgroundColor: colors.card,
+          borderRadius: radius.lg,
+          borderWidth: 1,
+          borderColor: colors.border,
+          padding: spacing.lg,
+        },
+        style,
+      ]}
     >
-      {/* Vote Button */}
-      <VoteButton
-        wishId={wish.id}
-        initialVoteCount={wish.vote_count || 0}
-        initialHasVoted={wish.has_voted}
-        onVoteChange={handleVoteChange}
-        size="md"
-        style={{ marginRight: spacing.md }}
-      />
-
-      {/* Content */}
-      <View style={{ flex: 1 }}>
-        {/* Title */}
-        <Text
+      <View style={{ flexDirection: 'row', gap: spacing.md }}>
+        {/* Vote Button */}
+        <TouchableOpacity
+          onPress={handleVote}
+          activeOpacity={0.8}
           style={{
-            fontSize: typography.base,
-            fontWeight: '600',
-            color: colors.foreground,
-            marginBottom: spacing.xs,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.sm,
+            borderRadius: radius.md,
+            borderWidth: 1,
+            borderColor: localVote.hasVoted ? colors.primary : colors.border,
+            backgroundColor: localVote.hasVoted ? colors.primary + '15' : 'transparent',
+            minWidth: 60,
           }}
-          numberOfLines={2}
         >
-          {wish.title}
-        </Text>
-
-        {/* Description */}
-        {wish.description && (
+          <ArrowBigUp
+            size={20}
+            color={localVote.hasVoted ? colors.primary : colors.mutedForeground}
+            fill={localVote.hasVoted ? colors.primary : 'transparent'}
+            strokeWidth={2}
+          />
           <Text
             style={{
-              fontSize: typography.sm,
-              color: colors.mutedForeground,
-              marginBottom: spacing.sm,
+              fontSize: typography.xs,
+              fontWeight: '700',
+              color: localVote.hasVoted ? colors.primary : colors.mutedForeground,
+              marginTop: 2,
             }}
-            numberOfLines={2}
           >
-            {wish.description}
+            {localVote.count}
           </Text>
-        )}
+        </TouchableOpacity>
 
-        {/* Meta */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-          {showStatus && (
-            <Badge variant={STATUS_VARIANTS[wish.status || 'pending'] || 'default'}>
-              {statusLabel}
-            </Badge>
+        {/* Content */}
+        <View style={{ flex: 1 }}>
+          {/* Title Row with Status Badge */}
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
+            <Text
+              style={{
+                fontSize: typography.sm,
+                fontWeight: '600',
+                color: colors.foreground,
+                flex: 1,
+                marginRight: spacing.sm,
+                lineHeight: 20,
+              }}
+              numberOfLines={2}
+            >
+              {wish.title}
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                backgroundColor: badgeStyles.bg,
+                paddingHorizontal: spacing.sm,
+                paddingVertical: 2,
+                borderRadius: radius.md,
+                borderWidth: badgeStyles.border ? 1 : 0,
+                borderColor: badgeStyles.border,
+              }}
+            >
+              <StatusIcon size={12} color={badgeStyles.text} strokeWidth={2} />
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontWeight: '500',
+                  color: badgeStyles.text,
+                }}
+              >
+                {status.label}
+              </Text>
+            </View>
+          </View>
+
+          {/* Description */}
+          {wish.description && (
+            <Text
+              style={{
+                fontSize: typography.xs,
+                color: colors.mutedForeground,
+                lineHeight: 18,
+                marginBottom: spacing.sm,
+              }}
+              numberOfLines={2}
+            >
+              {wish.description}
+            </Text>
           )}
-          {showCategory && wish.category?.name && (
-            <Badge variant="default">{wish.category.name}</Badge>
-          )}
+
+          {/* Footer */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+            {/* Category */}
+            {wish.category && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: wish.category.color || colors.primary,
+                  }}
+                />
+                <Text style={{ fontSize: typography.xs, color: colors.mutedForeground }}>
+                  {wish.category.name}
+                </Text>
+              </View>
+            )}
+
+            {/* Author */}
+            <Text style={{ fontSize: typography.xs, color: colors.mutedForeground }}>
+              {authorName}
+            </Text>
+
+            {/* Comments */}
+            <TouchableOpacity
+              onPress={handleCommentPress}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+            >
+              <MessageSquare size={12} color={colors.mutedForeground} />
+              <Text style={{ fontSize: typography.xs, color: colors.mutedForeground }}>
+                {wish.comment_count ?? 0}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </TouchableOpacity>

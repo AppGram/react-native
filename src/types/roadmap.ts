@@ -45,6 +45,8 @@ export interface RoadmapItem {
   created_at: string
   updated_at: string
   wish?: Wish | null
+  vote_count?: number
+  comment_count?: number
 }
 
 export interface RoadmapData {

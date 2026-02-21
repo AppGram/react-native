@@ -1,7 +1,77 @@
 /**
- * useHelpCenter Hook
+ * Help Center Hooks
  *
- * Fetches help center collections, flows, and articles.
+ * Fetch help center collections, flows, and articles for custom UI implementations.
+ *
+ * @example
+ * ```tsx
+ * import { useHelpCenter } from '@appgram/react-native'
+ *
+ * function HelpCenterScreen() {
+ *   const { collection, flows, isLoading, error } = useHelpCenter()
+ *
+ *   if (isLoading) return <ActivityIndicator />
+ *   if (error) return <Text>{error}</Text>
+ *
+ *   return (
+ *     <ScrollView>
+ *       <Text style={styles.title}>{collection?.title}</Text>
+ *       {flows.map(flow => (
+ *         <TouchableOpacity
+ *           key={flow.id}
+ *           onPress={() => navigation.navigate('HelpFlow', { slug: flow.slug })}
+ *         >
+ *           <Text>{flow.title}</Text>
+ *           <Text>{flow.articles_count} articles</Text>
+ *         </TouchableOpacity>
+ *       ))}
+ *     </ScrollView>
+ *   )
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Fetch a specific flow with its articles
+ * import { useHelpFlow } from '@appgram/react-native'
+ *
+ * function HelpFlowScreen({ route }) {
+ *   const { flow, isLoading } = useHelpFlow(route.params.slug)
+ *
+ *   if (isLoading || !flow) return <ActivityIndicator />
+ *
+ *   return (
+ *     <View>
+ *       <Text style={styles.title}>{flow.title}</Text>
+ *       {flow.articles?.map(article => (
+ *         <ArticleItem key={article.id} article={article} />
+ *       ))}
+ *     </View>
+ *   )
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Fetch a specific article
+ * import { useHelpArticle } from '@appgram/react-native'
+ *
+ * function ArticleScreen({ route }) {
+ *   const { article, isLoading } = useHelpArticle(
+ *     route.params.slug,
+ *     route.params.flowId
+ *   )
+ *
+ *   if (isLoading || !article) return <ActivityIndicator />
+ *
+ *   return (
+ *     <ScrollView>
+ *       <Text style={styles.title}>{article.title}</Text>
+ *       <Markdown>{article.body}</Markdown>
+ *     </ScrollView>
+ *   )
+ * }
+ * ```
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -14,10 +84,29 @@ import type { HelpCollection, HelpFlow, HelpArticle } from '../types'
 // ============================================================================
 
 export interface UseHelpCenterResult {
+  /**
+   * The help collection data
+   */
   collection: HelpCollection | null
+
+  /**
+   * List of help flows in this collection
+   */
   flows: HelpFlow[]
+
+  /**
+   * Loading state
+   */
   isLoading: boolean
+
+  /**
+   * Error message if any
+   */
   error: string | null
+
+  /**
+   * Manually refetch data
+   */
   refetch: () => Promise<void>
 }
 
@@ -66,12 +155,32 @@ export function useHelpCenter(): UseHelpCenterResult {
 // ============================================================================
 
 export interface UseHelpFlowResult {
+  /**
+   * The help flow data with its articles
+   */
   flow: HelpFlow | null
+
+  /**
+   * Loading state
+   */
   isLoading: boolean
+
+  /**
+   * Error message if any
+   */
   error: string | null
+
+  /**
+   * Manually refetch data
+   */
   refetch: () => Promise<void>
 }
 
+/**
+ * Fetch a specific help flow by slug.
+ *
+ * @param slug - The help flow slug
+ */
 export function useHelpFlow(slug: string): UseHelpFlowResult {
   const { client } = useAppgramContext()
   const [flow, setFlow] = useState<HelpFlow | null>(null)
@@ -116,12 +225,33 @@ export function useHelpFlow(slug: string): UseHelpFlowResult {
 // ============================================================================
 
 export interface UseHelpArticleResult {
+  /**
+   * The help article data
+   */
   article: HelpArticle | null
+
+  /**
+   * Loading state
+   */
   isLoading: boolean
+
+  /**
+   * Error message if any
+   */
   error: string | null
+
+  /**
+   * Manually refetch data
+   */
   refetch: () => Promise<void>
 }
 
+/**
+ * Fetch a specific help article by slug and flow ID.
+ *
+ * @param slug - The article slug
+ * @param flowId - The parent flow ID
+ */
 export function useHelpArticle(slug: string, flowId: string): UseHelpArticleResult {
   const { client } = useAppgramContext()
   const [article, setArticle] = useState<HelpArticle | null>(null)

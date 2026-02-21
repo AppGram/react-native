@@ -1,7 +1,67 @@
 /**
  * AppgramProvider for React Native
  *
- * Root provider that manages configuration, API client, and theming.
+ * Root provider component that manages configuration, API client, theming, and fingerprinting.
+ * Wrap your app with this provider to enable Appgram SDK functionality.
+ *
+ * @example
+ * ```tsx
+ * import { AppgramProvider } from '@appgram/react-native'
+ *
+ * function App() {
+ *   return (
+ *     <AppgramProvider
+ *       config={{
+ *         projectId: 'your-project-id',
+ *         orgSlug: 'your-org',
+ *         projectSlug: 'your-project',
+ *       }}
+ *     >
+ *       <NavigationContainer>
+ *         {/* Your app content *\/}
+ *       </NavigationContainer>
+ *     </AppgramProvider>
+ *   )
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // With custom theming
+ * <AppgramProvider
+ *   config={{
+ *     projectId: 'your-project-id',
+ *     theme: {
+ *       mode: 'dark', // 'light' | 'dark' | 'system'
+ *       darkColors: {
+ *         primary: '#38BDF8',
+ *         background: '#0F172A',
+ *       },
+ *     },
+ *   }}
+ * >
+ *   {children}
+ * </AppgramProvider>
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Using the context hooks
+ * import { useAppgramContext, useAppgramTheme } from '@appgram/react-native'
+ *
+ * function MyComponent() {
+ *   const { client, config, fingerprint } = useAppgramContext()
+ *   const { colors, spacing, isDark } = useAppgramTheme()
+ *
+ *   return (
+ *     <View style={{ backgroundColor: colors.background }}>
+ *       <Text style={{ color: colors.foreground }}>
+ *         Theme: {isDark ? 'Dark' : 'Light'}
+ *       </Text>
+ *     </View>
+ *   )
+ * }
+ * ```
  */
 
 import React, { useMemo, useEffect, useState, createContext, useContext } from 'react'
@@ -10,34 +70,117 @@ import { AppgramClient } from '../client/AppgramClient'
 import { getFingerprint } from '../utils/fingerprint'
 import { lightColors, darkColors, type AppgramColors, spacing, radius, typography } from '../theme'
 
+/**
+ * Theme mode options
+ */
 export type ThemeMode = 'light' | 'dark' | 'system'
 
+/**
+ * Complete theme object with colors, spacing, radius, and typography
+ */
 export interface AppgramTheme {
+  /**
+   * Current theme mode
+   */
   mode: ThemeMode
+
+  /**
+   * Whether dark mode is active
+   */
   isDark: boolean
+
+  /**
+   * Color palette
+   */
   colors: AppgramColors
+
+  /**
+   * Spacing scale (xs, sm, md, lg, xl, 2xl)
+   */
   spacing: typeof spacing
+
+  /**
+   * Border radius scale (sm, md, lg, xl, full)
+   */
   radius: typeof radius
+
+  /**
+   * Typography scale (xs, sm, base, lg, xl, 2xl, 3xl)
+   */
   typography: typeof typography
 }
 
+/**
+ * Appgram SDK configuration
+ */
 export interface AppgramConfig {
+  /**
+   * Your Appgram project ID (required)
+   */
   projectId: string
+
+  /**
+   * Organization slug for API routing
+   */
   orgSlug?: string
+
+  /**
+   * Project slug for API routing
+   */
   projectSlug?: string
+
+  /**
+   * Custom API URL (defaults to https://api.appgram.dev)
+   */
   apiUrl?: string
+
+  /**
+   * Theme configuration
+   */
   theme?: {
+    /**
+     * Theme mode: 'light', 'dark', or 'system'
+     * @default 'system'
+     */
     mode?: ThemeMode
+
+    /**
+     * Custom light theme colors
+     */
     lightColors?: Partial<AppgramColors>
+
+    /**
+     * Custom dark theme colors
+     */
     darkColors?: Partial<AppgramColors>
   }
+
+  /**
+   * Enable device fingerprinting for anonymous voting
+   * @default true
+   */
   enableFingerprinting?: boolean
 }
 
 interface AppgramContextValue {
+  /**
+   * SDK configuration with resolved defaults
+   */
   config: AppgramConfig & { apiUrl: string }
+
+  /**
+   * API client instance
+   */
   client: AppgramClient
+
+  /**
+   * Device fingerprint for anonymous identification
+   */
   fingerprint: string | null
+
+  /**
+   * Current theme
+   */
   theme: AppgramTheme
 }
 
@@ -45,11 +188,25 @@ const AppgramContext = createContext<AppgramContextValue | null>(null)
 
 const DEFAULT_API_URL = 'https://api.appgram.dev'
 
+/**
+ * Props for AppgramProvider
+ */
 export interface AppgramProviderProps {
+  /**
+   * SDK configuration
+   */
   config: AppgramConfig
+
+  /**
+   * Child components
+   */
   children: React.ReactNode
 }
 
+/**
+ * Root provider component for the Appgram SDK.
+ * Provides configuration, API client, theming, and fingerprinting to all child components.
+ */
 export function AppgramProvider({ config, children }: AppgramProviderProps): React.ReactElement {
   const systemColorScheme = useColorScheme()
   const [fingerprint, setFingerprint] = useState<string | null>(null)
@@ -116,7 +273,10 @@ export function AppgramProvider({ config, children }: AppgramProviderProps): Rea
 }
 
 /**
- * Hook to access Appgram context
+ * Hook to access the full Appgram context.
+ * Must be used within an AppgramProvider.
+ *
+ * @throws Error if used outside of AppgramProvider
  */
 export function useAppgramContext(): AppgramContextValue {
   const context = useContext(AppgramContext)
@@ -127,7 +287,10 @@ export function useAppgramContext(): AppgramContextValue {
 }
 
 /**
- * Hook to access theme
+ * Hook to access the current theme.
+ * Must be used within an AppgramProvider.
+ *
+ * @throws Error if used outside of AppgramProvider
  */
 export function useAppgramTheme(): AppgramTheme {
   const { theme } = useAppgramContext()

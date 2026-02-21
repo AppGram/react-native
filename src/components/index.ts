@@ -1,17 +1,104 @@
+/**
+ * Component Exports
+ *
+ * Pre-built UI components for common Appgram features.
+ * All components adapt to the theme configured in AppgramProvider.
+ */
+
 // Base components
-export * from './base'
+export {
+  Button,
+  Card,
+  Badge,
+  Input,
+  type ButtonProps,
+  type CardProps,
+  type BadgeProps,
+  type InputProps,
+} from './base'
 
 // Feedback components
-export * from './feedback'
+export {
+  VoteButton,
+  WishCard,
+  WishList,
+  WishDetailModal,
+  SubmitWishSheet,
+  type VoteButtonProps,
+  type WishCardProps,
+  type WishListProps,
+  type WishDetailModalProps,
+  type SubmitWishSheetProps,
+} from './feedback'
 
 // Support components
-export * from './support'
+export {
+  SupportForm,
+  type SupportFormProps,
+} from './support'
 
 // Forms components
-export * from './forms'
+export {
+  ContactFormRenderer,
+  type ContactFormRendererProps,
+} from './forms'
 
 // Help components
-export * from './help'
+export {
+  HelpFlowCard,
+  HelpArticleCard,
+  HelpCenter,
+  HelpFlowDetail,
+  HelpArticleDetail,
+  type HelpFlowCardProps,
+  type HelpArticleCardProps,
+  type HelpCenterProps,
+  type HelpFlowDetailProps,
+  type HelpArticleDetailProps,
+} from './help'
 
 // Status components
-export * from './status'
+export {
+  StatusBoard,
+  type StatusBoardProps,
+} from './status'
+
+// Releases/Changelog components
+export {
+  ReleaseList,
+  ReleaseDetail,
+  Releases,
+  type ReleaseListProps,
+  type ReleaseDetailProps,
+  type ReleasesProps,
+} from './releases'
+
+// Roadmap components
+export {
+  RoadmapBoard,
+  type RoadmapBoardProps,
+} from './roadmap'
+
+// Survey components
+export {
+  SurveyForm,
+  type SurveyFormProps,
+} from './survey'
+
+// Chat components
+export {
+  ChatScreen,
+  type ChatScreenProps,
+} from './chat'
+
+// Blog components
+export {
+  Blog,
+  BlogList,
+  BlogCard,
+  BlogPostDetail,
+  type BlogProps,
+  type BlogListProps,
+  type BlogCardProps,
+  type BlogPostDetailProps,
+} from './blog'

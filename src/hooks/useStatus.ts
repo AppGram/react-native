@@ -1,7 +1,58 @@
 /**
  * useStatus Hook
  *
- * Fetches status page data.
+ * Fetches status page data with auto-refresh support.
+ *
+ * @example
+ * ```tsx
+ * import { useStatus } from '@appgram/react-native'
+ *
+ * function StatusPageScreen() {
+ *   const { data, isLoading, error, refetch } = useStatus({
+ *     slug: 'status',
+ *     refreshInterval: 60000, // Refresh every minute
+ *   })
+ *
+ *   if (isLoading) return <ActivityIndicator />
+ *   if (error) return <Text>{error}</Text>
+ *   if (!data) return null
+ *
+ *   return (
+ *     <ScrollView>
+ *       <StatusHeader overall={data.overall_status} />
+ *       {data.services?.map(service => (
+ *         <ServiceStatusCard
+ *           key={service.id}
+ *           name={service.name}
+ *           status={service.status}
+ *           description={service.description}
+ *         />
+ *       ))}
+ *       {data.active_incidents?.map(incident => (
+ *         <IncidentCard key={incident.id} incident={incident} />
+ *       ))}
+ *     </ScrollView>
+ *   )
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Minimal status badge
+ * function StatusBadge() {
+ *   const { data, isLoading } = useStatus({ refreshInterval: 30000 })
+ *
+ *   if (isLoading || !data) return null
+ *
+ *   const isOperational = data.overall_status === 'operational'
+ *
+ *   return (
+ *     <View style={[styles.badge, isOperational ? styles.green : styles.red]}>
+ *       <Text>{isOperational ? 'All Systems Operational' : 'Issues Detected'}</Text>
+ *     </View>
+ *   )
+ * }
+ * ```
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -10,14 +61,38 @@ import { getErrorMessage } from '../utils'
 import type { StatusPageOverview } from '../types'
 
 export interface UseStatusOptions {
+  /**
+   * Status page slug
+   * @default 'status'
+   */
   slug?: string
+
+  /**
+   * Auto-refresh interval in milliseconds (0 to disable)
+   * @default 0
+   */
   refreshInterval?: number
 }
 
 export interface UseStatusResult {
+  /**
+   * Status page data including services and incidents
+   */
   data: StatusPageOverview | null
+
+  /**
+   * Loading state
+   */
   isLoading: boolean
+
+  /**
+   * Error message if any
+   */
   error: string | null
+
+  /**
+   * Manually refetch data
+   */
   refetch: () => Promise<void>
 }
 

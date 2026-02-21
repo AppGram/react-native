@@ -1,9 +1,3 @@
-/**
- * ContactFormRenderer Component
- *
- * Renders a dynamic contact form based on form configuration.
- */
-
 import React, { useState, useCallback } from 'react'
 import {
   View,
@@ -31,6 +25,42 @@ export interface ContactFormRendererProps {
   style?: ViewStyle
 }
 
+/**
+ * ContactFormRenderer Component
+ *
+ * Renders a dynamic contact form based on form configuration.
+ * Supports text, email, textarea, checkbox, select, and radio fields.
+ *
+ * @example
+ * ```tsx
+ * import { ContactFormRenderer } from '@appgram/react-native'
+ *
+ * function ContactScreen() {
+ *   return (
+ *     <ContactFormRenderer
+ *       formId="contact-form-id"
+ *       title="Contact Us"
+ *       description="We'd love to hear from you"
+ *       onSuccess={() => {
+ *         Alert.alert('Success', 'Message sent!')
+ *         navigation.goBack()
+ *       }}
+ *       onError={(error) => Alert.alert('Error', error)}
+ *     />
+ *   )
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // With custom project ID
+ * <ContactFormRenderer
+ *   formId="feedback-form"
+ *   projectId="custom-project-id"
+ *   onSuccess={() => setShowThankYou(true)}
+ * />
+ * ```
+ */
 export function ContactFormRenderer({
   formId,
   projectId: propProjectId,
@@ -239,7 +269,7 @@ export function ContactFormRenderer({
               style={[
                 inputStyle,
                 { minHeight: 100, textAlignVertical: 'top', color: colors.foreground, fontSize: typography.base },
-                error && { borderColor: colors.error },
+                error ? { borderColor: colors.error } : undefined,
               ]}
               value={typeof value === 'string' ? value : ''}
               onChangeText={(text) => handleFieldChange(field.id, text)}
@@ -274,7 +304,7 @@ export function ContactFormRenderer({
               style={[
                 inputStyle,
                 { color: colors.foreground, fontSize: typography.base },
-                error && { borderColor: colors.error },
+                error ? { borderColor: colors.error } : undefined,
               ]}
               value={typeof value === 'string' ? value : ''}
               onChangeText={(text) => handleFieldChange(field.id, text)}
@@ -320,11 +350,12 @@ export function ContactFormRenderer({
       style={[{ flex: 1 }, style]}
     >
       <ScrollView
-        contentContainerStyle={{ padding: spacing.lg }}
+        contentContainerStyle={{ paddingVertical: spacing.lg }}
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         <Card variant="elevated">
-          {/* Header */}
           <Text
             style={{
               fontSize: typography.xl,
@@ -347,7 +378,6 @@ export function ContactFormRenderer({
             </Text>
           )}
 
-          {/* Success Message */}
           {successMessage && (
             <View
               style={{
@@ -363,7 +393,6 @@ export function ContactFormRenderer({
             </View>
           )}
 
-          {/* Error Message */}
           {submitError && (
             <View
               style={{
@@ -379,10 +408,8 @@ export function ContactFormRenderer({
             </View>
           )}
 
-          {/* Form Fields */}
           {form.fields.map(renderField)}
 
-          {/* Submit Button */}
           <Button
             onPress={handleSubmit}
             loading={isSubmitting}

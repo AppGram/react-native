@@ -1,15 +1,8 @@
-/**
- * Input Component
- *
- * A styled text input with Hazel design system styling.
- */
-
 import React, { useState } from 'react'
 import {
   View,
   TextInput,
   Text,
-  StyleSheet,
   type ViewStyle,
   type TextStyle,
   type TextInputProps,
@@ -24,6 +17,42 @@ export interface InputProps extends Omit<TextInputProps, 'style'> {
   labelStyle?: TextStyle
 }
 
+/**
+ * Input Component
+ *
+ * A styled text input with label and error support.
+ * Automatically shows focus and error states.
+ *
+ * @example
+ * ```tsx
+ * import { Input } from '@appgram/react-native'
+ *
+ * function EmailInput({ value, onChange, error }) {
+ *   return (
+ *     <Input
+ *       label="Email"
+ *       value={value}
+ *       onChangeText={onChange}
+ *       placeholder="you@example.com"
+ *       keyboardType="email-address"
+ *       error={error}
+ *     />
+ *   )
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // With validation error
+ * <Input
+ *   label="Password"
+ *   value={password}
+ *   onChangeText={setPassword}
+ *   secureTextEntry
+ *   error={password.length < 8 ? 'Password must be at least 8 characters' : undefined}
+ * />
+ * ```
+ */
 export function Input({
   label,
   error,

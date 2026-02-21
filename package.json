@@ -4,7 +4,7 @@
   "description": "React Native SDK for Appgram - feature voting, roadmaps, changelogs, help center, support, and status pages",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
-  "types": "lib/typescript/src/index.d.ts",
+  "types": "lib/typescript/index.d.ts",
   "react-native": "src/index.ts",
   "source": "src/index.ts",
   "files": [
@@ -19,17 +19,31 @@
     "lint": "eslint src/",
     "build": "bob build",
     "prepare": "bob build",
-    "release": "npm publish"
+    "release": "npm publish",
+    "docs:json": "npx typedoc --json docs.json --entryPoints src/index.ts",
+    "docs:transform": "node transform-docs.js",
+    "docs:build": "npm run docs:json && npm run docs:transform"
   },
   "peerDependencies": {
+    "@react-native-async-storage/async-storage": ">=1.19.0",
+    "lucide-react-native": ">=0.300.0",
     "react": ">=18.0.0",
-    "react-native": ">=0.70.0"
+    "react-native": ">=0.70.0",
+    "react-native-markdown-display": ">=7.0.0",
+    "react-native-render-html": ">=6.0.0",
+    "react-native-svg": ">=13.0.0"
   },
   "devDependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@types/react": "^18.2.0",
+    "lucide-react-native": "^0.469.0",
     "react": "^18.2.0",
     "react-native": "^0.73.0",
     "react-native-builder-bob": "^0.23.0",
+    "react-native-markdown-display": "^7.0.2",
+    "react-native-render-html": "^6.3.4",
+    "react-native-svg": "^15.8.0",
+    "typedoc": "^0.28.17",
     "typescript": "^5.3.0"
   },
   "repository": {
@@ -54,7 +68,12 @@
     "targets": [
       "commonjs",
       "module",
-      ["typescript", { "project": "tsconfig.build.json" }]
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
     ]
   }
 }

@@ -1,9 +1,3 @@
-/**
- * HelpFlowCard Component
- *
- * A card displaying a help flow/collection with Hazel design system styling.
- */
-
 import React from 'react'
 import { View, Text, TouchableOpacity, type ViewStyle } from 'react-native'
 import { useAppgramTheme } from '../../provider'
@@ -15,6 +9,31 @@ export interface HelpFlowCardProps {
   style?: ViewStyle
 }
 
+/**
+ * HelpFlowCard Component
+ *
+ * A card displaying a help flow/collection.
+ * Use to build custom help center navigation.
+ *
+ * @example
+ * ```tsx
+ * import { HelpFlowCard } from '@appgram/react-native'
+ *
+ * function HelpFlowList({ flows }) {
+ *   return (
+ *     <View>
+ *       {flows.map(flow => (
+ *         <HelpFlowCard
+ *           key={flow.id}
+ *           flow={flow}
+ *           onPress={(f) => navigation.navigate('HelpFlow', { flow: f })}
+ *         />
+ *       ))}
+ *     </View>
+ *   )
+ * }
+ * ```
+ */
 export function HelpFlowCard({
   flow,
   onPress,
@@ -39,28 +58,9 @@ export function HelpFlowCard({
   return (
     <TouchableOpacity
       onPress={handlePress}
-      disabled={!onPress}
-      activeOpacity={onPress ? 0.7 : 1}
+      activeOpacity={0.7}
       style={[containerStyle, style]}
     >
-      {/* Icon */}
-      {flow.icon && (
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: radius.md,
-            backgroundColor: colors.primary + '20',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: spacing.md,
-          }}
-        >
-          <Text style={{ fontSize: 20 }}>{flow.icon}</Text>
-        </View>
-      )}
-
-      {/* Title */}
       <Text
         style={{
           fontSize: typography.lg,
@@ -73,7 +73,6 @@ export function HelpFlowCard({
         {flow.name}
       </Text>
 
-      {/* Description */}
       {flow.description && (
         <Text
           style={{
@@ -87,7 +86,6 @@ export function HelpFlowCard({
         </Text>
       )}
 
-      {/* Article count */}
       <Text
         style={{
           fontSize: typography.xs,

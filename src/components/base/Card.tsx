@@ -1,11 +1,5 @@
-/**
- * Card Component
- *
- * A styled container with Hazel design system styling.
- */
-
 import React from 'react'
-import { View, StyleSheet, type ViewStyle } from 'react-native'
+import { View, type ViewStyle } from 'react-native'
 import { useAppgramTheme } from '../../provider'
 
 export interface CardProps {
@@ -14,28 +8,64 @@ export interface CardProps {
   variant?: 'default' | 'elevated' | 'outlined'
 }
 
-export function Card({ children, style, variant = 'default' }: CardProps): React.ReactElement {
+/**
+ * Card Component
+ *
+ * A styled container with variant support.
+ * Supports default, elevated, and outlined variants.
+ *
+ * @example
+ * ```tsx
+ * import { Card } from '@appgram/react-native'
+ *
+ * function FeatureCard({ title, description }) {
+ *   return (
+ *     <Card variant="elevated">
+ *       <Text style={{ fontWeight: '600' }}>{title}</Text>
+ *       <Text>{description}</Text>
+ *     </Card>
+ *   )
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Outlined variant
+ * <Card variant="outlined" style={{ marginBottom: 16 }}>
+ *   <Text>Content here</Text>
+ * </Card>
+ * ```
+ */
+export function Card({
+  children,
+  style,
+  variant = 'default',
+}: CardProps): React.ReactElement {
   const { colors, radius } = useAppgramTheme()
 
-  const cardStyle: ViewStyle = {
+  const baseStyle: ViewStyle = {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     padding: 16,
-    ...(variant === 'elevated' && {
+  }
+
+  const variantStyles: Record<string, ViewStyle> = {
+    default: {},
+    elevated: {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 8,
       elevation: 3,
-    }),
-    ...(variant === 'outlined' && {
+    },
+    outlined: {
       borderWidth: 1,
       borderColor: colors.border,
-    }),
+    },
   }
 
   return (
-    <View style={[cardStyle, style]}>
+    <View style={[baseStyle, variantStyles[variant], style]}>
       {children}
     </View>
   )

@@ -1,9 +1,3 @@
-/**
- * VoteButton Component
- *
- * An upvote button for wishes with Hazel design system styling.
- */
-
 import React, { useState, useEffect } from 'react'
 import {
   TouchableOpacity,
@@ -25,6 +19,40 @@ export interface VoteButtonProps {
   style?: ViewStyle
 }
 
+/**
+ * VoteButton Component
+ *
+ * An upvote button for wishes with optimistic updates.
+ *
+ * @example
+ * ```tsx
+ * import { VoteButton } from '@appgram/react-native'
+ *
+ * function WishItem({ wish }) {
+ *   return (
+ *     <View style={styles.row}>
+ *       <VoteButton
+ *         wishId={wish.id}
+ *         initialVoteCount={wish.vote_count}
+ *         initialHasVoted={wish.has_voted}
+ *         onVoteChange={(hasVoted, newCount) => {
+ *           console.log('Vote changed:', { hasVoted, newCount })
+ *         }}
+ *       />
+ *       <Text>{wish.title}</Text>
+ *     </View>
+ *   )
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Different sizes
+ * <VoteButton wishId={id} initialVoteCount={10} size="sm" />
+ * <VoteButton wishId={id} initialVoteCount={10} size="md" />
+ * <VoteButton wishId={id} initialVoteCount={10} size="lg" />
+ * ```
+ */
 export function VoteButton({
   wishId,
   initialVoteCount,
@@ -41,7 +69,6 @@ export function VoteButton({
   const [hasVoted, setHasVoted] = useState(initialHasVoted)
   const [voteId, setVoteId] = useState<string | undefined>(initialVoteId)
 
-  // Check vote status on mount if not provided
   useEffect(() => {
     if (!initialHasVoted && !initialVoteId) {
       checkVote(wishId).then(({ hasVoted: voted, voteId: id }) => {
@@ -69,69 +96,67 @@ export function VoteButton({
         const newCount = voteCount + 1
         setVoteCount(newCount)
         setHasVoted(true)
-        // Re-check to get vote ID
         checkVote(wishId).then(({ voteId: id }) => setVoteId(id))
         onVoteChange?.(true, newCount)
       }
     }
   }
 
-  const sizeStyles: Record<string, { padding: number; iconSize: number; fontSize: number }> = {
+  const sizeConfig = {
     sm: { padding: 8, iconSize: 16, fontSize: typography.xs },
     md: { padding: 12, iconSize: 20, fontSize: typography.sm },
     lg: { padding: 16, iconSize: 24, fontSize: typography.base },
   }
 
-  const currentSize = sizeStyles[size]
+  const config = sizeConfig[size]
+  const textColor = hasVoted ? '#FFFFFF' : colors.foreground
 
   const containerStyle: ViewStyle = {
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: hasVoted ? colors.primary : colors.muted,
     borderRadius: radius.md,
-    padding: currentSize.padding,
+    padding: config.padding,
     minWidth: 48,
   }
-
-  const textColor = hasVoted ? '#FFFFFF' : colors.foreground
 
   return (
     <TouchableOpacity
       onPress={handlePress}
       disabled={isVoting}
-      style={[containerStyle, style]}
       activeOpacity={0.7}
+      style={style}
     >
-      {isVoting ? (
-        <ActivityIndicator size="small" color={textColor} />
-      ) : (
-        <>
-          {/* Upvote Arrow */}
-          <View
-            style={{
-              width: 0,
-              height: 0,
-              borderLeftWidth: currentSize.iconSize / 2,
-              borderRightWidth: currentSize.iconSize / 2,
-              borderBottomWidth: currentSize.iconSize * 0.6,
-              borderLeftColor: 'transparent',
-              borderRightColor: 'transparent',
-              borderBottomColor: textColor,
-              marginBottom: 4,
-            }}
-          />
-          <Text
-            style={{
-              fontSize: currentSize.fontSize,
-              fontWeight: '600',
-              color: textColor,
-            }}
-          >
-            {voteCount}
-          </Text>
-        </>
-      )}
+      <View style={containerStyle}>
+        {isVoting ? (
+          <ActivityIndicator size="small" color={textColor} />
+        ) : (
+          <>
+            <View
+              style={{
+                width: 0,
+                height: 0,
+                borderLeftWidth: config.iconSize / 2,
+                borderRightWidth: config.iconSize / 2,
+                borderBottomWidth: config.iconSize * 0.6,
+                borderLeftColor: 'transparent',
+                borderRightColor: 'transparent',
+                borderBottomColor: textColor,
+                marginBottom: 4,
+              }}
+            />
+            <Text
+              style={{
+                fontSize: config.fontSize,
+                fontWeight: '600',
+                color: textColor,
+              }}
+            >
+              {voteCount}
+            </Text>
+          </>
+        )}
+      </View>
     </TouchableOpacity>
   )
 }

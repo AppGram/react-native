@@ -1,9 +1,3 @@
-/**
- * HelpArticleCard Component
- *
- * A card displaying a help article preview.
- */
-
 import React from 'react'
 import { View, Text, TouchableOpacity, type ViewStyle } from 'react-native'
 import { useAppgramTheme } from '../../provider'
@@ -15,6 +9,31 @@ export interface HelpArticleCardProps {
   style?: ViewStyle
 }
 
+/**
+ * HelpArticleCard Component
+ *
+ * A card displaying a help article preview.
+ * Use to build custom help article lists.
+ *
+ * @example
+ * ```tsx
+ * import { HelpArticleCard } from '@appgram/react-native'
+ *
+ * function ArticleList({ articles }) {
+ *   return (
+ *     <View>
+ *       {articles.map(article => (
+ *         <HelpArticleCard
+ *           key={article.id}
+ *           article={article}
+ *           onPress={(a) => navigation.navigate('HelpArticle', { article: a })}
+ *         />
+ *       ))}
+ *     </View>
+ *   )
+ * }
+ * ```
+ */
 export function HelpArticleCard({
   article,
   onPress,
@@ -39,26 +58,9 @@ export function HelpArticleCard({
   return (
     <TouchableOpacity
       onPress={handlePress}
-      disabled={!onPress}
-      activeOpacity={onPress ? 0.7 : 1}
+      activeOpacity={0.7}
       style={[containerStyle, style]}
     >
-      {/* Document Icon */}
-      <View
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: radius.md,
-          backgroundColor: colors.muted,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginRight: spacing.md,
-        }}
-      >
-        <Text style={{ fontSize: 16, color: colors.mutedForeground }}>📄</Text>
-      </View>
-
-      {/* Content */}
       <View style={{ flex: 1 }}>
         <Text
           style={{
@@ -84,7 +86,6 @@ export function HelpArticleCard({
         )}
       </View>
 
-      {/* Arrow */}
       <Text style={{ color: colors.mutedForeground, marginLeft: spacing.sm }}>
         →
       </Text>

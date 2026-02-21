@@ -1,10 +1,4 @@
-/**
- * HelpCenter Component
- *
- * Displays help center flows/collections in a grid layout.
- */
-
-import React from 'react'
+import React, { useState } from 'react'
 import {
   View,
   Text,
@@ -28,6 +22,38 @@ export interface HelpCenterProps {
   contentContainerStyle?: ViewStyle
 }
 
+/**
+ * HelpCenter Component
+ *
+ * Displays help center flows/collections list.
+ * Use onFlowPress to navigate to flow detail in your app.
+ *
+ * @example
+ * ```tsx
+ * import { HelpCenter } from '@appgram/react-native'
+ *
+ * function HelpScreen() {
+ *   return (
+ *     <HelpCenter
+ *       title="Help Center"
+ *       description="Find answers to common questions"
+ *       onFlowPress={(flow) => {
+ *         navigation.navigate('HelpFlow', { slug: flow.slug })
+ *       }}
+ *     />
+ *   )
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // With grid layout
+ * <HelpCenter
+ *   numColumns={2}
+ *   emptyText="No help articles available yet"
+ * />
+ * ```
+ */
 export function HelpCenter({
   title = 'Help Center',
   description = 'Find answers to common questions',
@@ -39,8 +65,7 @@ export function HelpCenter({
 }: HelpCenterProps): React.ReactElement {
   const { colors, typography, spacing } = useAppgramTheme()
   const { flows, isLoading, error, refetch } = useHelpCenter()
-
-  const [refreshing, setRefreshing] = React.useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -62,77 +87,34 @@ export function HelpCenter({
 
   const renderHeader = () => (
     <View style={{ marginBottom: spacing.lg }}>
-      <Text
-        style={{
-          fontSize: typography['2xl'],
-          fontWeight: '700',
-          color: colors.foreground,
-          marginBottom: spacing.xs,
-        }}
-      >
+      <Text style={{ fontSize: typography['2xl'], fontWeight: '600', color: colors.foreground, marginBottom: spacing.xs }}>
         {title}
       </Text>
-      <Text
-        style={{
-          fontSize: typography.base,
-          color: colors.mutedForeground,
-        }}
-      >
+      <Text style={{ fontSize: typography.base, color: colors.mutedForeground }}>
         {description}
       </Text>
     </View>
   )
 
   const renderEmpty = () => {
-    if (isLoading) {
-      return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      )
-    }
-
-    if (error) {
-      return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl }}>
-          <Text style={{ fontSize: typography.base, color: colors.error, textAlign: 'center' }}>
-            {error}
-          </Text>
-        </View>
-      )
-    }
-
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl }}>
-        <Text style={{ fontSize: typography.base, color: colors.mutedForeground, textAlign: 'center' }}>
-          {emptyText}
-        </Text>
-      </View>
-    )
+    if (isLoading) return <ActivityIndicator size="large" color={colors.primary} style={{ padding: spacing.lg }} />
+    if (error) return <Text style={{ color: colors.error, textAlign: 'center', padding: spacing.lg }}>{error}</Text>
+    return <Text style={{ color: colors.mutedForeground, textAlign: 'center', padding: spacing.lg }}>{emptyText}</Text>
   }
 
   return (
     <FlatList
+      key={`flows-list-${numColumns}`}
       data={flows}
       renderItem={renderItem}
       keyExtractor={(item) => item.id}
       numColumns={numColumns}
       ListHeaderComponent={renderHeader}
       ListEmptyComponent={renderEmpty}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          tintColor={colors.primary}
-          colors={[colors.primary]}
-        />
-      }
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
       style={style}
-      contentContainerStyle={[
-        { padding: spacing.lg },
-        flows.length === 0 && { flex: 1 },
-        contentContainerStyle,
-      ]}
+      contentContainerStyle={[{ paddingVertical: spacing.lg, flexGrow: 1 }, contentContainerStyle]}
     />
   )
 }

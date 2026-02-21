@@ -1,15 +1,8 @@
-/**
- * Button Component
- *
- * A styled button with Hazel design system styling.
- */
-
 import React from 'react'
 import {
   TouchableOpacity,
   Text,
   ActivityIndicator,
-  StyleSheet,
   type ViewStyle,
   type TextStyle,
 } from 'react-native'
@@ -18,7 +11,7 @@ import { useAppgramTheme } from '../../provider'
 export interface ButtonProps {
   children: React.ReactNode
   onPress: () => void
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost'
+  variant?: 'solid' | 'outline' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
   loading?: boolean
@@ -26,58 +19,70 @@ export interface ButtonProps {
   textStyle?: TextStyle
 }
 
+/**
+ * Button Component
+ *
+ * A styled button with variant support.
+ * Supports solid, outline, and ghost variants with sm, md, lg sizes.
+ *
+ * @example
+ * ```tsx
+ * import { Button } from '@appgram/react-native'
+ *
+ * function SubmitButton() {
+ *   return (
+ *     <Button
+ *       onPress={handleSubmit}
+ *       variant="solid"
+ *       size="lg"
+ *       loading={isSubmitting}
+ *     >
+ *       Submit
+ *     </Button>
+ *   )
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Outline and ghost variants
+ * <Button variant="outline" onPress={handleCancel}>Cancel</Button>
+ * <Button variant="ghost" onPress={handleSkip}>Skip</Button>
+ * ```
+ */
 export function Button({
   children,
   onPress,
-  variant = 'primary',
+  variant = 'solid',
   size = 'md',
   disabled = false,
   loading = false,
   style,
   textStyle,
 }: ButtonProps): React.ReactElement {
-  const { colors, radius, typography } = useAppgramTheme()
+  const { colors, radius } = useAppgramTheme()
 
-  const sizeStyles: Record<string, { paddingVertical: number; paddingHorizontal: number; fontSize: number }> = {
-    sm: { paddingVertical: 8, paddingHorizontal: 12, fontSize: typography.sm },
-    md: { paddingVertical: 12, paddingHorizontal: 16, fontSize: typography.base },
-    lg: { paddingVertical: 16, paddingHorizontal: 24, fontSize: typography.lg },
+  const sizeStyles = {
+    sm: { paddingVertical: 8, paddingHorizontal: 12, fontSize: 14 },
+    md: { paddingVertical: 12, paddingHorizontal: 16, fontSize: 16 },
+    lg: { paddingVertical: 16, paddingHorizontal: 24, fontSize: 18 },
   }
 
-  const variantStyles: Record<string, { container: ViewStyle; text: TextStyle }> = {
-    primary: {
-      container: {
-        backgroundColor: colors.primary,
-      },
-      text: {
-        color: '#FFFFFF',
-      },
-    },
-    secondary: {
-      container: {
-        backgroundColor: colors.muted,
-      },
-      text: {
-        color: colors.foreground,
-      },
+  const variantStyles = {
+    solid: {
+      container: { backgroundColor: colors.primary } as ViewStyle,
+      text: { color: '#FFFFFF' } as TextStyle,
+      spinnerColor: '#FFFFFF',
     },
     outline: {
-      container: {
-        backgroundColor: 'transparent',
-        borderWidth: 1,
-        borderColor: colors.border,
-      },
-      text: {
-        color: colors.foreground,
-      },
+      container: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.primary } as ViewStyle,
+      text: { color: colors.primary } as TextStyle,
+      spinnerColor: colors.primary,
     },
     ghost: {
-      container: {
-        backgroundColor: 'transparent',
-      },
-      text: {
-        color: colors.primary,
-      },
+      container: { backgroundColor: 'transparent' } as ViewStyle,
+      text: { color: colors.primary } as TextStyle,
+      spinnerColor: colors.primary,
     },
   }
 
@@ -108,16 +113,14 @@ export function Button({
       style={[containerStyle, style]}
       activeOpacity={0.7}
     >
-      {loading ? (
+      {loading && (
         <ActivityIndicator
           size="small"
-          color={currentVariant.text.color}
+          color={currentVariant.spinnerColor}
           style={{ marginRight: 8 }}
         />
-      ) : null}
-      <Text style={[labelStyle, textStyle]}>
-        {children}
-      </Text>
+      )}
+      <Text style={[labelStyle, textStyle]}>{children}</Text>
     </TouchableOpacity>
   )
 }
