@@ -46,7 +46,7 @@ function App() {
 | **Roadmap** | `RoadmapBoard` | `useRoadmap` |
 | **Changelog/Releases** | `Releases`, `ReleaseList`, `ReleaseDetail` | `useReleases`, `useRelease` |
 | **Help Center** | `HelpCenter`, `HelpFlowCard`, `HelpFlowDetail`, `HelpArticleCard`, `HelpArticleDetail` | `useHelpCenter`, `useHelpFlow`, `useHelpArticle` |
-| **Support** | `SupportForm`, `ContactFormRenderer` | `useSupport`, `useContactForm`, `useContactFormSubmit` |
+| **Support** | `SupportForm`, `FormRenderer` | `useSupport`, `useForm`, `useFormSubmit` |
 | **Surveys** | `SurveyForm` | `useSurvey`, `useSurveySubmit` |
 | **Blog** | `Blog`, `BlogList`, `BlogCard`, `BlogPostDetail` | `useBlogPosts`, `useBlogPost`, `useBlogCategories`, `useFeaturedPosts` |
 | **Status Page** | `StatusBoard` | `useStatus` |
@@ -241,16 +241,15 @@ import { SupportForm } from '@appgram/react-native'
 />
 ```
 
-#### ContactFormRenderer
+#### FormRenderer
 
-Render dynamic contact forms.
+Render dynamic forms.
 
 ```tsx
-import { ContactFormRenderer } from '@appgram/react-native'
+import { FormRenderer } from '@appgram/react-native'
 
-<ContactFormRenderer
+<FormRenderer
   formId="contact-sales"
-  userEmail="user@example.com"
   onSuccess={() => console.log('Submitted!')}
 />
 ```
@@ -440,17 +439,17 @@ await submitTicket({
 })
 ```
 
-### useContactForm / useContactFormSubmit
+### useForm / useFormSubmit
 
-Fetch and submit dynamic contact forms.
+Fetch and submit dynamic forms.
 
 ```tsx
-import { useContactForm, useContactFormSubmit } from '@appgram/react-native'
+import { useForm, useFormSubmit } from '@appgram/react-native'
 
-const { form, isLoading } = useContactForm('form-id')
-const { submitForm, isSubmitting, error } = useContactFormSubmit()
+const { form, isLoading } = useForm('form-id')
+const { submitForm, isSubmitting, error } = useFormSubmit()
 
-await submitForm('form-id', { name: 'John', email: 'john@example.com', message: 'Hello!' })
+await submitForm(projectId, 'form-id', { name: 'John', email: 'john@example.com', message: 'Hello!' })
 ```
 
 ### useSurvey / useSurveySubmit
