@@ -11,11 +11,11 @@ import {
   type ViewStyle,
 } from 'react-native'
 import { useAppgramTheme, useAppgramContext } from '../../provider'
-import { useContactForm, useContactFormSubmit } from '../../hooks'
+import { useForm, useFormSubmit } from '../../hooks'
 import { Button, Card } from '../base'
-import type { ContactFormField } from '../../types'
+import type { FormField } from '../../types'
 
-export interface ContactFormRendererProps {
+export interface FormRendererProps {
   formId: string
   projectId?: string
   title?: string
@@ -26,19 +26,19 @@ export interface ContactFormRendererProps {
 }
 
 /**
- * ContactFormRenderer Component
+ * FormRenderer Component
  *
- * Renders a dynamic contact form based on form configuration.
+ * Renders a dynamic form based on form configuration.
  * Supports text, email, textarea, checkbox, select, and radio fields.
  *
  * @example
  * ```tsx
- * import { ContactFormRenderer } from '@appgram/react-native'
+ * import { FormRenderer } from '@appgram/react-native'
  *
- * function ContactScreen() {
+ * function FormScreen() {
  *   return (
- *     <ContactFormRenderer
- *       formId="contact-form-id"
+ *     <FormRenderer
+ *       formId="form-id"
  *       title="Contact Us"
  *       description="We'd love to hear from you"
  *       onSuccess={() => {
@@ -54,14 +54,14 @@ export interface ContactFormRendererProps {
  * @example
  * ```tsx
  * // With custom project ID
- * <ContactFormRenderer
+ * <FormRenderer
  *   formId="feedback-form"
  *   projectId="custom-project-id"
  *   onSuccess={() => setShowThankYou(true)}
  * />
  * ```
  */
-export function ContactFormRenderer({
+export function FormRenderer({
   formId,
   projectId: propProjectId,
   title,
@@ -69,13 +69,13 @@ export function ContactFormRenderer({
   onSuccess,
   onError,
   style,
-}: ContactFormRendererProps): React.ReactElement {
+}: FormRendererProps): React.ReactElement {
   const { colors, radius, typography, spacing } = useAppgramTheme()
   const { config } = useAppgramContext()
   const projectId = propProjectId || config.projectId
 
-  const { form, isLoading: formLoading, error: formError } = useContactForm(formId)
-  const { submitForm, isSubmitting, error: submitError, successMessage } = useContactFormSubmit({
+  const { form, isLoading: formLoading, error: formError } = useForm(formId)
+  const { submitForm, isSubmitting, error: submitError, successMessage } = useFormSubmit({
     onSuccess,
     onError,
   })
@@ -148,7 +148,7 @@ export function ContactFormRenderer({
     paddingVertical: 12,
   }
 
-  const renderField = (field: ContactFormField) => {
+  const renderField = (field: FormField) => {
     const error = fieldErrors[field.id]
     const value = formData[field.id]
 
@@ -424,4 +424,4 @@ export function ContactFormRenderer({
   )
 }
 
-export default ContactFormRenderer
+export default FormRenderer

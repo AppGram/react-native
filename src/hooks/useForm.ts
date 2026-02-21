@@ -1,15 +1,15 @@
 /**
- * Contact Form Hooks
+ * Form Hooks
  *
- * Fetch and submit dynamic contact forms.
+ * Fetch and submit dynamic forms.
  *
  * @example
  * ```tsx
- * import { useContactForm, useContactFormSubmit } from '@appgram/react-native'
+ * import { useForm, useFormSubmit } from '@appgram/react-native'
  *
- * function ContactScreen({ formId }) {
- *   const { form, isLoading, error } = useContactForm(formId)
- *   const { submitForm, isSubmitting, successMessage } = useContactFormSubmit({
+ * function FormScreen({ formId }) {
+ *   const { form, isLoading, error } = useForm(formId)
+ *   const { submitForm, isSubmitting, successMessage } = useFormSubmit({
  *     onSuccess: () => {
  *       Alert.alert('Thank you!', 'Your message has been sent.')
  *     },
@@ -51,7 +51,7 @@
  * @example
  * ```tsx
  * // Conditional loading
- * const { form, refetch } = useContactForm('support-form', { enabled: false })
+ * const { form, refetch } = useForm('support-form', { enabled: false })
  *
  * useEffect(() => {
  *   if (shouldShowForm) {
@@ -64,9 +64,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useAppgramContext } from '../provider'
 import { getErrorMessage } from '../utils'
-import type { ContactForm, ContactFormSubmission } from '../types'
+import type { Form, FormSubmission } from '../types'
 
-export interface UseContactFormOptions {
+export interface UseFormOptions {
   /**
    * Whether to fetch the form on mount
    * @default true
@@ -74,11 +74,11 @@ export interface UseContactFormOptions {
   enabled?: boolean
 }
 
-export interface UseContactFormResult {
+export interface UseFormResult {
   /**
-   * The contact form configuration
+   * The form configuration
    */
-  form: ContactForm | null
+  form: Form | null
 
   /**
    * Loading state
@@ -97,15 +97,15 @@ export interface UseContactFormResult {
 }
 
 /**
- * Fetch a contact form configuration by ID.
+ * Fetch a form configuration by ID.
  *
- * @param formId - The contact form ID
+ * @param formId - The form ID
  * @param options - Hook options
  */
-export function useContactForm(formId: string, options: UseContactFormOptions = {}): UseContactFormResult {
+export function useForm(formId: string, options: UseFormOptions = {}): UseFormResult {
   const { enabled = true } = options
   const { client } = useAppgramContext()
-  const [form, setForm] = useState<ContactForm | null>(null)
+  const [form, setForm] = useState<Form | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -115,7 +115,7 @@ export function useContactForm(formId: string, options: UseContactFormOptions = 
     setError(null)
 
     try {
-      const response = await client.getContactForm(formId)
+      const response = await client.getForm(formId)
 
       if (response.success && response.data) {
         setForm(response.data)
@@ -143,7 +143,7 @@ export function useContactForm(formId: string, options: UseContactFormOptions = 
   }
 }
 
-export interface UseContactFormSubmitOptions {
+export interface UseFormSubmitOptions {
   /**
    * Minimum time between submissions in milliseconds
    * @default 5000
@@ -153,7 +153,7 @@ export interface UseContactFormSubmitOptions {
   /**
    * Callback when form is submitted successfully
    */
-  onSuccess?: (submission: ContactFormSubmission) => void
+  onSuccess?: (submission: FormSubmission) => void
 
   /**
    * Callback when submission fails
@@ -161,7 +161,7 @@ export interface UseContactFormSubmitOptions {
   onError?: (error: string) => void
 }
 
-export interface UseContactFormSubmitResult {
+export interface UseFormSubmitResult {
   /**
    * Loading state during submission
    */
@@ -183,14 +183,14 @@ export interface UseContactFormSubmitResult {
   isRateLimited: boolean
 
   /**
-   * Submit the contact form
+   * Submit the form
    * @returns The submission data or null if failed
    */
   submitForm: (
     projectId: string,
     formId: string,
     data: Record<string, string | boolean>
-  ) => Promise<ContactFormSubmission | null>
+  ) => Promise<FormSubmission | null>
 
   /**
    * Clear error and success messages
@@ -199,11 +199,11 @@ export interface UseContactFormSubmitResult {
 }
 
 /**
- * Submit contact forms with rate limiting.
+ * Submit forms with rate limiting.
  *
  * @param options - Hook options
  */
-export function useContactFormSubmit(options: UseContactFormSubmitOptions = {}): UseContactFormSubmitResult {
+export function useFormSubmit(options: UseFormSubmitOptions = {}): UseFormSubmitResult {
   const { rateLimitMs = 5000 } = options
   const { client } = useAppgramContext()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -221,7 +221,7 @@ export function useContactFormSubmit(options: UseContactFormSubmitOptions = {}):
     projectId: string,
     formId: string,
     data: Record<string, string | boolean>
-  ): Promise<ContactFormSubmission | null> => {
+  ): Promise<FormSubmission | null> => {
     const now = Date.now()
     if (now - lastSubmitRef.current < rateLimitMs) {
       setIsRateLimited(true)
@@ -235,7 +235,7 @@ export function useContactFormSubmit(options: UseContactFormSubmitOptions = {}):
     setSuccessMessage(null)
 
     try {
-      const response = await client.submitContactForm(projectId, formId, { data })
+      const response = await client.submitForm(projectId, formId, { data })
 
       if (response.success && response.data) {
         lastSubmitRef.current = Date.now()

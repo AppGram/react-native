@@ -15,7 +15,7 @@ import {
 } from 'react-native'
 import { X, Send, Sparkles } from 'lucide-react-native'
 import { useAppgramTheme, useAppgramContext } from '../../provider'
-import type { Wish, ContactForm, ContactFormField } from '../../types'
+import type { Wish, Form, FormField } from '../../types'
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window')
 
@@ -136,8 +136,8 @@ export function SubmitWishSheet({
   const [error, setError] = useState<string | null>(null)
 
   // Auto-detect custom form from project customization
-  const [customForm, setCustomForm] = useState<ContactForm | null>(null)
-  const [customFormFields, setCustomFormFields] = useState<ContactFormField[]>([])
+  const [customForm, setCustomForm] = useState<Form | null>(null)
+  const [customFormFields, setCustomFormFields] = useState<FormField[]>([])
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string | boolean>>({})
   const [isLoadingCustomization, setIsLoadingCustomization] = useState(false)
 
@@ -154,7 +154,7 @@ export function SubmitWishSheet({
         if (response.success && response.data?.customization_data) {
           const customizationData = response.data.customization_data as {
             content?: { feedback?: { customFormId?: string } }
-            contactForms?: Record<string, ContactForm & { integration?: { type: string } }>
+            contactForms?: Record<string, Form & { integration?: { type: string } }>
           }
 
           const contactForms = customizationData.contactForms || {}
@@ -164,7 +164,7 @@ export function SubmitWishSheet({
           if (explicitFormId && contactForms[explicitFormId]) {
             const form = contactForms[explicitFormId]
             if (form.enabled && form.integration?.type === 'wish') {
-              setCustomForm(form as ContactForm)
+              setCustomForm(form as Form)
               // Filter out built-in fields
               const extraFields = form.fields.filter(
                 (f) => !['title', 'description', 'email', 'name', 'message'].includes(f.id.toLowerCase())
@@ -184,7 +184,7 @@ export function SubmitWishSheet({
 
           if (wishFormEntry) {
             const [, form] = wishFormEntry
-            setCustomForm(form as ContactForm)
+            setCustomForm(form as Form)
             // Filter out built-in fields
             const extraFields = form.fields.filter(
               (f) => !['title', 'description', 'email', 'name', 'message'].includes(f.id.toLowerCase())
@@ -553,7 +553,7 @@ export function SubmitWishSheet({
 // ============================================================================
 
 interface CustomFieldInputProps {
-  field: ContactFormField
+  field: FormField
   value: string | boolean | undefined
   onChange: (value: string | boolean) => void
   colors: {

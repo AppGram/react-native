@@ -1,7 +1,7 @@
 /**
  * Forms Components
  *
- * Components for rendering dynamic contact forms.
+ * Components for rendering dynamic forms.
  */
 
-export { ContactFormRenderer, type ContactFormRendererProps } from './ContactFormRenderer'
+export { FormRenderer, type FormRendererProps } from './FormRenderer'

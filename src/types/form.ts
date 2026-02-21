@@ -1,32 +1,32 @@
 /**
- * Contact Form Types
+ * Form Types
  *
- * Configurable contact forms for collecting user submissions.
+ * Configurable forms for collecting user submissions.
  */
 
-export type ContactFormFieldType = 'text' | 'email' | 'textarea' | 'select' | 'radio' | 'checkbox'
+export type FormFieldType = 'text' | 'email' | 'textarea' | 'select' | 'radio' | 'checkbox'
 
-export interface ContactFormFieldValidation {
+export interface FormFieldValidation {
   minLength?: number
   maxLength?: number
   pattern?: string
 }
 
-export interface ContactFormField {
+export interface FormField {
   id: string
-  type: ContactFormFieldType
+  type: FormFieldType
   label: string
   placeholder?: string
   required: boolean
   options?: string[]
-  validation?: ContactFormFieldValidation
+  validation?: FormFieldValidation
 }
 
 /**
- * Contact form integration settings
+ * Form integration settings
  * Defines how the form submission is processed
  */
-export interface ContactFormIntegration {
+export interface FormIntegration {
   /**
    * Integration type:
    * - 'support': Creates a support ticket
@@ -47,11 +47,11 @@ export interface ContactFormIntegration {
   webhookUrl?: string
 }
 
-export interface ContactForm {
+export interface Form {
   id: string
   name: string
   description?: string
-  fields: ContactFormField[]
+  fields: FormField[]
   submitButtonText: string
   successMessage: string
   emailRecipient: string
@@ -63,10 +63,10 @@ export interface ContactForm {
   /**
    * Integration settings for form submission
    */
-  integration?: ContactFormIntegration
+  integration?: FormIntegration
 }
 
-export interface ContactFormSubmission {
+export interface FormSubmission {
   id: string
   form_id: string
   project_id: string
@@ -74,7 +74,7 @@ export interface ContactFormSubmission {
   submitted_at: string
 }
 
-export interface ContactFormSubmitInput {
+export interface FormSubmitInput {
   data: Record<string, string | boolean>
   metadata?: Record<string, unknown>
 }

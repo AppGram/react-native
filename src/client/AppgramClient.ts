@@ -25,9 +25,9 @@ import type {
   SurveyNode,
   SurveyResponse,
   SurveySubmitInput,
-  ContactForm,
-  ContactFormSubmission,
-  ContactFormSubmitInput,
+  Form,
+  FormSubmission,
+  FormSubmitInput,
   StatusPageOverview,
   BlogPost,
   BlogPostsResponse,
@@ -675,21 +675,13 @@ export class AppgramClient {
   }
 
   // ============================================================================
-  // Contact Forms
+  // Forms
   // ============================================================================
 
   /**
-   * Get a public contact form by ID (legacy endpoint)
-   * @deprecated Use getContactForm instead
+   * Get a form by ID via portal endpoint
    */
-  async getPublicForm(formId: string): Promise<ApiResponse<ContactForm>> {
-    return this.get<ContactForm>(`/api/v1/forms/${formId}`)
-  }
-
-  /**
-   * Get a contact form by ID via portal endpoint
-   */
-  async getContactForm(formId: string): Promise<ApiResponse<ContactForm>> {
+  async getForm(formId: string): Promise<ApiResponse<Form>> {
     const response = await this.get<{ contact_form: {
       id: string
       name: string
@@ -717,7 +709,7 @@ export class AppgramClient {
     if (!response.success || !response.data?.contact_form) {
       return {
         success: false,
-        error: response.error || { code: 'NOT_FOUND', message: 'Contact form not found' },
+        error: response.error || { code: 'NOT_FOUND', message: 'Form not found' },
       }
     }
 
@@ -730,7 +722,7 @@ export class AppgramClient {
         description: raw.description,
         fields: raw.fields.map(f => ({
           id: f.id,
-          type: f.type as ContactForm['fields'][0]['type'],
+          type: f.type as Form['fields'][0]['type'],
           label: f.label,
           placeholder: f.placeholder,
           required: f.required,
@@ -749,9 +741,9 @@ export class AppgramClient {
   }
 
   /**
-   * Track a contact form view (call when form is displayed)
+   * Track a form view (call when form is displayed)
    */
-  async trackContactFormView(formId: string): Promise<ApiResponse<{ tracked: boolean }>> {
+  async trackFormView(formId: string): Promise<ApiResponse<{ tracked: boolean }>> {
     const endpoint = `/projects/${this.projectId}/contact-forms/${formId}/view`
     const url = `${this.baseUrl}${endpoint}`
 
@@ -806,13 +798,13 @@ export class AppgramClient {
   }
 
   /**
-   * Submit a contact form
+   * Submit a form
    */
-  async submitContactForm(
+  async submitForm(
     projectId: string,
     formId: string,
-    data: ContactFormSubmitInput
-  ): Promise<ApiResponse<ContactFormSubmission>> {
+    data: FormSubmitInput
+  ): Promise<ApiResponse<FormSubmission>> {
     const url = `${this.baseUrl}/api/v1/projects/${projectId}/contact-forms/${formId}/submit`
 
     try {
@@ -876,7 +868,7 @@ export class AppgramClient {
 
       return {
         success: true,
-        data: (result.data as ContactFormSubmission) || {
+        data: (result.data as FormSubmission) || {
           id: '',
           form_id: formId,
           project_id: projectId,

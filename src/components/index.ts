@@ -39,8 +39,8 @@ export {
 
 // Forms components
 export {
-  ContactFormRenderer,
-  type ContactFormRendererProps,
+  FormRenderer,
+  type FormRendererProps,
 } from './forms'
 
 // Help components

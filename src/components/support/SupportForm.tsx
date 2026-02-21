@@ -13,8 +13,8 @@ import {
 } from 'react-native'
 import { Send, Search, MessageSquare, HelpCircle, CheckCircle2, Mail, Ticket, ExternalLink } from 'lucide-react-native'
 import { useAppgramTheme, useAppgramContext } from '../../provider'
-import { useSupport, useContactForm } from '../../hooks'
-import type { SupportRequestCategory, SupportRequest, ContactForm, ContactFormField } from '../../types'
+import { useSupport, useForm } from '../../hooks'
+import type { SupportRequestCategory, SupportRequest, Form, FormField } from '../../types'
 
 export interface SupportFormProps {
   /** Page heading */
@@ -149,7 +149,7 @@ export function SupportForm({
   } = useSupport({ onSuccess, onError })
 
   // Auto-detect custom form from project customization
-  const [customForm, setCustomForm] = useState<ContactForm | null>(null)
+  const [customForm, setCustomForm] = useState<Form | null>(null)
   const [isLoadingCustomization, setIsLoadingCustomization] = useState(true)
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -162,7 +162,7 @@ export function SupportForm({
         if (response.success && response.data?.customization_data) {
           const customizationData = response.data.customization_data as {
             content?: { support?: { customFormId?: string } }
-            contactForms?: Record<string, ContactForm & { integration?: { type: string } }>
+            contactForms?: Record<string, Form & { integration?: { type: string } }>
           }
 
           const contactForms = customizationData.contactForms || {}
@@ -172,7 +172,7 @@ export function SupportForm({
           if (explicitFormId && contactForms[explicitFormId]) {
             const form = contactForms[explicitFormId]
             if (form.enabled && form.integration?.type === 'support') {
-              setCustomForm(form as ContactForm)
+              setCustomForm(form as Form)
               setIsLoadingCustomization(false)
               return
             }
@@ -194,7 +194,7 @@ export function SupportForm({
 
             if (supportFormEntry) {
               const [, form] = supportFormEntry
-              setCustomForm(form as ContactForm)
+              setCustomForm(form as Form)
             }
           }
         }
@@ -218,7 +218,7 @@ export function SupportForm({
     form: fetchedForm,
     isLoading: isLoadingForm,
     error: fetchError,
-  } = useContactForm(customFormId || '', { enabled: !!customFormId })
+  } = useForm(customFormId || '', { enabled: !!customFormId })
 
   // Use fetched form if customFormId prop was provided, otherwise use auto-detected form
   const effectiveForm = customFormId ? fetchedForm : customForm
@@ -232,7 +232,7 @@ export function SupportForm({
   // Validate a custom form field
   const validateCustomField = (
     value: string | boolean | undefined,
-    field: ContactFormField
+    field: FormField
   ): string | null => {
     if (field.type === 'checkbox') {
       if (field.required && !value) return 'This field is required'
@@ -798,7 +798,7 @@ export function SupportForm({
 // ============================================================================
 
 interface CustomFormFieldInputProps {
-  field: ContactFormField
+  field: FormField
   value: string | boolean | undefined
   error?: string
   onChange: (value: string | boolean) => void

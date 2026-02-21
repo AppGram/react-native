@@ -15,13 +15,13 @@ export {
   type StoredTicket,
 } from './useSupport'
 export {
-  useContactForm,
-  useContactFormSubmit,
-  type UseContactFormOptions,
-  type UseContactFormResult,
-  type UseContactFormSubmitOptions,
-  type UseContactFormSubmitResult,
-} from './useContactForm'
+  useForm,
+  useFormSubmit,
+  type UseFormOptions,
+  type UseFormResult,
+  type UseFormSubmitOptions,
+  type UseFormSubmitResult,
+} from './useForm'
 export {
   useHelpCenter,
   useHelpFlow,
