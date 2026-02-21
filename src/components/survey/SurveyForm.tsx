@@ -78,8 +78,9 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
   const currentNode = nodes.find(n => n.id === currentNodeId) || null
   const currentAnswer = currentNode ? answers.get(currentNode.id) : undefined
 
-  // Calculate progress based on visited nodes
-  const progress = nodes.length > 0 ? ((visitedNodes.length + 1) / nodes.length) * 100 : 0
+  // Calculate progress - estimate based on typical survey depth (can't know exact total for branching)
+  const estimatedMaxDepth = 8
+  const progress = Math.min(((visitedNodes.length + 1) / estimatedMaxDepth) * 100, 95)
 
   // Auto-close after submission
   useEffect(() => {
@@ -100,9 +101,9 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
   }, [])
 
   // Get next node based on branching logic
-  const getNextNode = useCallback((node: SurveyNode, answer: AnswerState): SurveyNode | null => {
-    // Yes/No legacy branching
-    if (node.question_type === 'yes_no') {
+  const getNextNode = useCallback((node: SurveyNode, answer: AnswerState | undefined): SurveyNode | null => {
+    // Yes/No branching via answer_yes_node_id / answer_no_node_id
+    if (node.question_type === 'yes_no' && answer) {
       const isYes = answer.answer_text === 'yes' || answer.answer === true
       const nextId = isYes ? node.answer_yes_node_id : node.answer_no_node_id
       if (nextId) {
@@ -110,8 +111,8 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
       }
     }
 
-    // Branch-based routing
-    if (node.branches && node.branches.length > 0) {
+    // Branch-based routing (conditional branches array)
+    if (node.branches && node.branches.length > 0 && answer) {
       for (const branch of node.branches) {
         const { condition } = branch
         let matches = false
@@ -139,9 +140,15 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
       }
     }
 
-    // Default next node
+    // Explicit next_node_id
     if (node.next_node_id) {
       return nodes.find(n => n.id === node.next_node_id) || null
+    }
+
+    // Tree-based routing: find child node (node whose parent_id equals this node's id)
+    const childNode = nodes.find(n => n.parent_id === node.id)
+    if (childNode) {
+      return childNode
     }
 
     return null
@@ -202,7 +209,7 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
     if (!currentNode || !canProceed) return
 
     const answer = answers.get(currentNode.id)
-    const nextNode = answer ? getNextNode(currentNode, answer) : null
+    const nextNode = getNextNode(currentNode, answer)
 
     if (nextNode) {
       animateTransition('next', () => {
@@ -505,10 +512,7 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
           {/* Question Number */}
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
             <Text style={{ fontSize: typography.sm, fontWeight: '600', color: colors.primary }}>
-              {visitedNodes.length + 1}
-            </Text>
-            <Text style={{ fontSize: typography.sm, color: colors.mutedForeground }}>
-              {' '}/ {nodes.length}
+              Question {visitedNodes.length + 1}
             </Text>
           </View>
 
