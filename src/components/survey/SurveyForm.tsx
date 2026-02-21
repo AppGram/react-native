@@ -57,7 +57,8 @@ interface AnswerState {
 export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = false, onSuccess, onError }: SurveyFormProps) {
   const { colors, radius, typography, spacing } = useAppgramTheme()
   const { survey, nodes, isLoading, error } = useSurvey(slug)
-  const { isSubmitting, submitResponse } = useSurveySubmit({ onSuccess: () => onSuccess?.(), onError })
+  // Don't pass onSuccess to hook - we'll call it after showing success screen
+  const { isSubmitting, submitResponse } = useSurveySubmit({ onError })
   const [answers, setAnswers] = useState<Map<string, AnswerState>>(new Map())
   const [visitedNodes, setVisitedNodes] = useState<string[]>([])
   const [submitted, setSubmitted] = useState(false)
@@ -145,6 +146,11 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
       return nodes.find(n => n.id === node.next_node_id) || null
     }
 
+    // If node has result_message, this is an endpoint - survey ends here
+    if (node.result_message) {
+      return null
+    }
+
     // Tree-based routing: find child node (node whose parent_id equals this node's id)
     const childNode = nodes.find(n => n.parent_id === node.id)
     if (childNode) {
@@ -192,9 +198,9 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
     })
   }
 
-  const handleSubmit = useCallback(async () => {
+  const submitSurvey = useCallback(async (finalAnswers: Map<string, AnswerState>) => {
     if (!survey) return
-    const answerEntries = Array.from(answers.entries()).map(([nodeId, ans]) => ({
+    const answerEntries = Array.from(finalAnswers.entries()).map(([nodeId, ans]) => ({
       node_id: nodeId,
       answer: ans.answer,
       answer_text: ans.answer_text,
@@ -203,12 +209,18 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
     }))
     const result = await submitResponse(survey.id, { fingerprint, answers: answerEntries })
     if (result) setSubmitted(true)
-  }, [survey, answers, submitResponse, fingerprint])
+  }, [survey, submitResponse, fingerprint])
 
-  const goNext = useCallback(() => {
-    if (!currentNode || !canProceed) return
+  // Handle answer and navigate - passes answer directly to avoid state timing issues
+  const handleAnswer = useCallback((answer: AnswerState) => {
+    if (!currentNode) return
 
-    const answer = answers.get(currentNode.id)
+    // Store answer
+    const newAnswers = new Map(answers)
+    newAnswers.set(currentNode.id, answer)
+    setAnswers(newAnswers)
+
+    // Determine next node using the answer directly (not from state)
     const nextNode = getNextNode(currentNode, answer)
 
     if (nextNode) {
@@ -217,9 +229,25 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
       })
     } else {
       // No next node — submit the survey
-      handleSubmit()
+      submitSurvey(newAnswers)
     }
-  }, [currentNode, canProceed, answers, getNextNode, handleSubmit])
+  }, [currentNode, answers, getNextNode, submitSurvey])
+
+  // For OK button - uses stored answer
+  const goNext = useCallback(() => {
+    if (!currentNode || !canProceed) return
+    const answer = answers.get(currentNode.id)
+    if (answer) {
+      const nextNode = getNextNode(currentNode, answer)
+      if (nextNode) {
+        animateTransition('next', () => {
+          setVisitedNodes(prev => [...prev, nextNode.id])
+        })
+      } else {
+        submitSurvey(answers)
+      }
+    }
+  }, [currentNode, canProceed, answers, getNextNode, submitSurvey])
 
   const goPrev = useCallback(() => {
     if (visitedNodes.length > 0) {
@@ -284,8 +312,8 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
                 <TouchableOpacity
                   key={opt}
                   onPress={() => {
-                    updateAnswer(node.id, { answer_text: optValue, answer: opt === 'Yes' })
-                    if (autoAdvance) setTimeout(goNext, 300)
+                    // Use handleAnswer to avoid state timing issues
+                    handleAnswer({ answer_text: optValue, answer: opt === 'Yes' })
                   }}
                   style={{
                     flex: 1,
@@ -318,8 +346,8 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
                 <TouchableOpacity
                   key={i}
                   onPress={() => {
-                    updateAnswer(node.id, { answer_options: [opt.value] })
-                    if (autoAdvance) setTimeout(goNext, 300)
+                    // Use handleAnswer to avoid state timing issues
+                    handleAnswer({ answer_options: [opt.value] })
                   }}
                   style={{
                     flexDirection: 'row',
@@ -417,8 +445,8 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
                 <TouchableOpacity
                   key={i}
                   onPress={() => {
-                    updateAnswer(node.id, { answer_rating: i + 1 })
-                    if (autoAdvance) setTimeout(goNext, 300)
+                    // Use handleAnswer to avoid state timing issues
+                    handleAnswer({ answer_rating: i + 1 })
                   }}
                   style={{ padding: spacing.xs }}
                 >
@@ -460,31 +488,18 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
 
   if (!survey || nodes.length === 0) return null
 
-  // Show result message if current node has one (terminal node)
-  if (currentNode?.result_message) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl }}>
-        <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primary + '20', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg }}>
-          <CheckCircle2 size={40} color={colors.primary} />
-        </View>
-        <Text style={{ fontSize: typography['2xl'], fontWeight: '700', color: colors.foreground, marginBottom: spacing.sm, textAlign: 'center' }}>
-          {currentNode.result_message}
-        </Text>
-      </View>
-    )
-  }
-
   if (submitted) {
+    // Show custom result_message from the last answered node, or default message
+    const lastNodeId = visitedNodes[visitedNodes.length - 1] || currentNodeId
+    const lastNode = nodes.find(n => n.id === lastNodeId)
+    const resultMessage = lastNode?.result_message || 'Thank you for your feedback!'
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl }}>
         <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primary + '20', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg }}>
           <CheckCircle2 size={40} color={colors.primary} />
         </View>
         <Text style={{ fontSize: typography['2xl'], fontWeight: '700', color: colors.foreground, marginBottom: spacing.sm, textAlign: 'center' }}>
-          Survey Submitted
-        </Text>
-        <Text style={{ fontSize: typography.base, color: colors.mutedForeground, textAlign: 'center' }}>
-          Thank you for your feedback!
+          {resultMessage}
         </Text>
       </View>
     )
