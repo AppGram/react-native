@@ -4,7 +4,7 @@
     "sdkName": "@appgram/react-native",
     "platform": "react-native",
     "language": "TypeScript",
-    "generatedAt": "2026-02-21T20:39:15.333Z"
+    "generatedAt": "2026-02-21T21:34:09.450Z"
   },
   "modules": [
     {
@@ -317,26 +317,6 @@
               "returnType": "Promise<ApiResponse<CommentsResponse>>"
             },
             {
-              "name": "getContactForm",
-              "access": "public",
-              "isStatic": false,
-              "isAsync": true,
-              "throws": false,
-              "declaration": "async getContactForm(formId: string): Promise<ApiResponse<ContactForm>>",
-              "description": {
-                "summary": "Get a contact form by ID via portal endpoint"
-              },
-              "parameters": [
-                {
-                  "name": "formId",
-                  "type": "string",
-                  "optional": false,
-                  "description": null
-                }
-              ],
-              "returnType": "Promise<ApiResponse<ContactForm>>"
-            },
-            {
               "name": "getFeaturedBlogPosts",
               "access": "public",
               "isStatic": false,
@@ -348,6 +328,26 @@
               },
               "parameters": [],
               "returnType": "Promise<ApiResponse<BlogPost[]>>"
+            },
+            {
+              "name": "getForm",
+              "access": "public",
+              "isStatic": false,
+              "isAsync": true,
+              "throws": false,
+              "declaration": "async getForm(formId: string): Promise<ApiResponse<Form>>",
+              "description": {
+                "summary": "Get a form by ID via portal endpoint"
+              },
+              "parameters": [
+                {
+                  "name": "formId",
+                  "type": "string",
+                  "optional": false,
+                  "description": null
+                }
+              ],
+              "returnType": "Promise<ApiResponse<Form>>"
             },
             {
               "name": "getHelpArticle",
@@ -420,27 +420,6 @@
               },
               "parameters": [],
               "returnType": "Promise<ApiResponse<object>>"
-            },
-            {
-              "name": "getPublicForm",
-              "access": "public",
-              "isStatic": false,
-              "isAsync": true,
-              "throws": false,
-              "declaration": "async getPublicForm(formId: string): Promise<ApiResponse<ContactForm>>",
-              "description": {
-                "summary": "Get a public contact form by ID (legacy endpoint)",
-                "deprecated": "Use getContactForm instead"
-              },
-              "parameters": [
-                {
-                  "name": "formId",
-                  "type": "string",
-                  "optional": false,
-                  "description": null
-                }
-              ],
-              "returnType": "Promise<ApiResponse<ContactForm>>"
             },
             {
               "name": "getPublicStatusOverview",
@@ -708,14 +687,14 @@
               "returnType": "Promise<ApiResponse<object>>"
             },
             {
-              "name": "submitContactForm",
+              "name": "submitForm",
               "access": "public",
               "isStatic": false,
               "isAsync": true,
               "throws": false,
-              "declaration": "async submitContactForm(projectId: string, formId: string, data: ContactFormSubmitInput): Promise<ApiResponse<ContactFormSubmission>>",
+              "declaration": "async submitForm(projectId: string, formId: string, data: FormSubmitInput): Promise<ApiResponse<FormSubmission>>",
               "description": {
-                "summary": "Submit a contact form"
+                "summary": "Submit a form"
               },
               "parameters": [
                 {
@@ -732,12 +711,12 @@
                 },
                 {
                   "name": "data",
-                  "type": "ContactFormSubmitInput",
+                  "type": "FormSubmitInput",
                   "optional": false,
                   "description": null
                 }
               ],
-              "returnType": "Promise<ApiResponse<ContactFormSubmission>>"
+              "returnType": "Promise<ApiResponse<FormSubmission>>"
             },
             {
               "name": "submitSupportRequest",
@@ -786,14 +765,14 @@
               "returnType": "Promise<ApiResponse<SurveyResponse>>"
             },
             {
-              "name": "trackContactFormView",
+              "name": "trackFormView",
               "access": "public",
               "isStatic": false,
               "isAsync": true,
               "throws": false,
-              "declaration": "async trackContactFormView(formId: string): Promise<ApiResponse<object>>",
+              "declaration": "async trackFormView(formId: string): Promise<ApiResponse<object>>",
               "description": {
-                "summary": "Track a contact form view (call when form is displayed)"
+                "summary": "Track a form view (call when form is displayed)"
               },
               "parameters": [
                 {
@@ -956,54 +935,6 @@
         },
         {
           "kind": "hook",
-          "name": "useContactForm",
-          "access": "public",
-          "description": {
-            "summary": "Fetch a contact form configuration by ID."
-          },
-          "declaration": "function useContactForm(formId: string, options: UseContactFormOptions): UseContactFormResult",
-          "parameters": [
-            {
-              "name": "formId",
-              "type": "string",
-              "optional": false,
-              "description": {
-                "summary": "The contact form ID"
-              }
-            },
-            {
-              "name": "options",
-              "type": "UseContactFormOptions",
-              "optional": false,
-              "description": {
-                "summary": "Hook options"
-              }
-            }
-          ],
-          "returnType": "UseContactFormResult"
-        },
-        {
-          "kind": "hook",
-          "name": "useContactFormSubmit",
-          "access": "public",
-          "description": {
-            "summary": "Submit contact forms with rate limiting."
-          },
-          "declaration": "function useContactFormSubmit(options: UseContactFormSubmitOptions): UseContactFormSubmitResult",
-          "parameters": [
-            {
-              "name": "options",
-              "type": "UseContactFormSubmitOptions",
-              "optional": false,
-              "description": {
-                "summary": "Hook options"
-              }
-            }
-          ],
-          "returnType": "UseContactFormSubmitResult"
-        },
-        {
-          "kind": "hook",
           "name": "useFeaturedPosts",
           "access": "public",
           "description": null,
@@ -1017,6 +948,54 @@
             }
           ],
           "returnType": "UseFeaturedPostsResult"
+        },
+        {
+          "kind": "hook",
+          "name": "useForm",
+          "access": "public",
+          "description": {
+            "summary": "Fetch a form configuration by ID."
+          },
+          "declaration": "function useForm(formId: string, options: UseFormOptions): UseFormResult",
+          "parameters": [
+            {
+              "name": "formId",
+              "type": "string",
+              "optional": false,
+              "description": {
+                "summary": "The form ID"
+              }
+            },
+            {
+              "name": "options",
+              "type": "UseFormOptions",
+              "optional": false,
+              "description": {
+                "summary": "Hook options"
+              }
+            }
+          ],
+          "returnType": "UseFormResult"
+        },
+        {
+          "kind": "hook",
+          "name": "useFormSubmit",
+          "access": "public",
+          "description": {
+            "summary": "Submit forms with rate limiting."
+          },
+          "declaration": "function useFormSubmit(options: UseFormSubmitOptions): UseFormSubmitResult",
+          "parameters": [
+            {
+              "name": "options",
+              "type": "UseFormSubmitOptions",
+              "optional": false,
+              "description": {
+                "summary": "Hook options"
+              }
+            }
+          ],
+          "returnType": "UseFormSubmitResult"
         },
         {
           "kind": "hook",
@@ -1389,17 +1368,17 @@
         },
         {
           "kind": "component",
-          "name": "ContactFormRenderer",
+          "name": "FormRenderer",
           "access": "public",
           "description": {
-            "summary": "ContactFormRenderer Component\n\nRenders a dynamic contact form based on form configuration.\nSupports text, email, textarea, checkbox, select, and radio fields.",
-            "example": "// With custom project ID\n<ContactFormRenderer\n  formId=\"feedback-form\"\n  projectId=\"custom-project-id\"\n  onSuccess={() => setShowThankYou(true)}\n/>"
+            "summary": "FormRenderer Component\n\nRenders a dynamic form based on form configuration.\nSupports text, email, textarea, checkbox, select, and radio fields.",
+            "example": "// With custom project ID\n<FormRenderer\n  formId=\"feedback-form\"\n  projectId=\"custom-project-id\"\n  onSuccess={() => setShowThankYou(true)}\n/>"
           },
-          "declaration": "function ContactFormRenderer(props: ContactFormRendererProps): ReactElement",
+          "declaration": "function FormRenderer(props: FormRendererProps): ReactElement",
           "parameters": [
             {
               "name": "props",
-              "type": "ContactFormRendererProps",
+              "type": "FormRendererProps",
               "optional": false,
               "description": null
             }
@@ -8908,10 +8887,10 @@
         },
         {
           "kind": "interface",
-          "name": "ContactForm",
+          "name": "Form",
           "access": "public",
           "description": null,
-          "declaration": "interface ContactForm",
+          "declaration": "interface Form",
           "properties": [
             {
               "name": "createdAt",
@@ -8960,11 +8939,11 @@
             },
             {
               "name": "fields",
-              "type": "ContactFormField[]",
+              "type": "FormField[]",
               "isStatic": false,
               "access": "public",
               "optional": false,
-              "declaration": "fields: ContactFormField[]",
+              "declaration": "fields: FormField[]",
               "description": null
             },
             {
@@ -8978,11 +8957,11 @@
             },
             {
               "name": "integration",
-              "type": "ContactFormIntegration",
+              "type": "FormIntegration",
               "isStatic": false,
               "access": "public",
               "optional": true,
-              "declaration": "integration?: ContactFormIntegration",
+              "declaration": "integration?: FormIntegration",
               "description": {
                 "summary": "Integration settings for form submission"
               }
@@ -9027,10 +9006,10 @@
         },
         {
           "kind": "interface",
-          "name": "ContactFormField",
+          "name": "FormField",
           "access": "public",
           "description": null,
-          "declaration": "interface ContactFormField",
+          "declaration": "interface FormField",
           "properties": [
             {
               "name": "id",
@@ -9079,30 +9058,30 @@
             },
             {
               "name": "type",
-              "type": "ContactFormFieldType",
+              "type": "FormFieldType",
               "isStatic": false,
               "access": "public",
               "optional": false,
-              "declaration": "type: ContactFormFieldType",
+              "declaration": "type: FormFieldType",
               "description": null
             },
             {
               "name": "validation",
-              "type": "ContactFormFieldValidation",
+              "type": "FormFieldValidation",
               "isStatic": false,
               "access": "public",
               "optional": true,
-              "declaration": "validation?: ContactFormFieldValidation",
+              "declaration": "validation?: FormFieldValidation",
               "description": null
             }
           ]
         },
         {
           "kind": "interface",
-          "name": "ContactFormRendererProps",
+          "name": "FormRendererProps",
           "access": "public",
           "description": null,
-          "declaration": "interface ContactFormRendererProps",
+          "declaration": "interface FormRendererProps",
           "properties": [
             {
               "name": "description",
@@ -9171,10 +9150,10 @@
         },
         {
           "kind": "interface",
-          "name": "ContactFormSubmission",
+          "name": "FormSubmission",
           "access": "public",
           "description": null,
-          "declaration": "interface ContactFormSubmission",
+          "declaration": "interface FormSubmission",
           "properties": [
             {
               "name": "data",
@@ -11020,198 +10999,6 @@
         },
         {
           "kind": "interface",
-          "name": "UseContactFormOptions",
-          "access": "public",
-          "description": null,
-          "declaration": "interface UseContactFormOptions",
-          "properties": [
-            {
-              "name": "enabled",
-              "type": "boolean",
-              "isStatic": false,
-              "access": "public",
-              "optional": true,
-              "declaration": "enabled?: boolean",
-              "description": {
-                "summary": "Whether to fetch the form on mount",
-                "defaultValue": "true"
-              }
-            }
-          ]
-        },
-        {
-          "kind": "interface",
-          "name": "UseContactFormResult",
-          "access": "public",
-          "description": null,
-          "declaration": "interface UseContactFormResult",
-          "properties": [
-            {
-              "name": "error",
-              "type": "string | null",
-              "isStatic": false,
-              "access": "public",
-              "optional": false,
-              "declaration": "error: string | null",
-              "description": {
-                "summary": "Error message if any"
-              }
-            },
-            {
-              "name": "form",
-              "type": "ContactForm | null",
-              "isStatic": false,
-              "access": "public",
-              "optional": false,
-              "declaration": "form: ContactForm | null",
-              "description": {
-                "summary": "The contact form configuration"
-              }
-            },
-            {
-              "name": "isLoading",
-              "type": "boolean",
-              "isStatic": false,
-              "access": "public",
-              "optional": false,
-              "declaration": "isLoading: boolean",
-              "description": {
-                "summary": "Loading state"
-              }
-            },
-            {
-              "name": "refetch",
-              "type": "() => Promise<void>",
-              "isStatic": false,
-              "access": "public",
-              "optional": false,
-              "declaration": "refetch: () => Promise<void>",
-              "description": {
-                "summary": "Manually refetch the form"
-              }
-            }
-          ]
-        },
-        {
-          "kind": "interface",
-          "name": "UseContactFormSubmitOptions",
-          "access": "public",
-          "description": null,
-          "declaration": "interface UseContactFormSubmitOptions",
-          "properties": [
-            {
-              "name": "onError",
-              "type": "(error: string) => void",
-              "isStatic": false,
-              "access": "public",
-              "optional": true,
-              "declaration": "onError?: (error: string) => void",
-              "description": {
-                "summary": "Callback when submission fails"
-              }
-            },
-            {
-              "name": "onSuccess",
-              "type": "(submission: ContactFormSubmission) => void",
-              "isStatic": false,
-              "access": "public",
-              "optional": true,
-              "declaration": "onSuccess?: (submission: ContactFormSubmission) => void",
-              "description": {
-                "summary": "Callback when form is submitted successfully"
-              }
-            },
-            {
-              "name": "rateLimitMs",
-              "type": "number",
-              "isStatic": false,
-              "access": "public",
-              "optional": true,
-              "declaration": "rateLimitMs?: number",
-              "description": {
-                "summary": "Minimum time between submissions in milliseconds",
-                "defaultValue": "5000"
-              }
-            }
-          ]
-        },
-        {
-          "kind": "interface",
-          "name": "UseContactFormSubmitResult",
-          "access": "public",
-          "description": null,
-          "declaration": "interface UseContactFormSubmitResult",
-          "properties": [
-            {
-              "name": "clearMessages",
-              "type": "() => void",
-              "isStatic": false,
-              "access": "public",
-              "optional": false,
-              "declaration": "clearMessages: () => void",
-              "description": {
-                "summary": "Clear error and success messages"
-              }
-            },
-            {
-              "name": "error",
-              "type": "string | null",
-              "isStatic": false,
-              "access": "public",
-              "optional": false,
-              "declaration": "error: string | null",
-              "description": {
-                "summary": "Error message if submission failed"
-              }
-            },
-            {
-              "name": "isRateLimited",
-              "type": "boolean",
-              "isStatic": false,
-              "access": "public",
-              "optional": false,
-              "declaration": "isRateLimited: boolean",
-              "description": {
-                "summary": "Whether the user is rate-limited from submitting"
-              }
-            },
-            {
-              "name": "isSubmitting",
-              "type": "boolean",
-              "isStatic": false,
-              "access": "public",
-              "optional": false,
-              "declaration": "isSubmitting: boolean",
-              "description": {
-                "summary": "Loading state during submission"
-              }
-            },
-            {
-              "name": "submitForm",
-              "type": "(projectId: string, formId: string, data: Record<string, string | boolean>) => Promise<ContactFormSubmission | null>",
-              "isStatic": false,
-              "access": "public",
-              "optional": false,
-              "declaration": "submitForm: (projectId: string, formId: string, data: Record<string, string | boolean>) => Promise<ContactFormSubmission | null>",
-              "description": {
-                "summary": "Submit the contact form"
-              }
-            },
-            {
-              "name": "successMessage",
-              "type": "string | null",
-              "isStatic": false,
-              "access": "public",
-              "optional": false,
-              "declaration": "successMessage: string | null",
-              "description": {
-                "summary": "Success message after submission"
-              }
-            }
-          ]
-        },
-        {
-          "kind": "interface",
           "name": "UseFeaturedPostsOptions",
           "access": "public",
           "description": null,
@@ -11285,6 +11072,198 @@
           ]
         },
         {
+          "kind": "interface",
+          "name": "UseFormOptions",
+          "access": "public",
+          "description": null,
+          "declaration": "interface UseFormOptions",
+          "properties": [
+            {
+              "name": "enabled",
+              "type": "boolean",
+              "isStatic": false,
+              "access": "public",
+              "optional": true,
+              "declaration": "enabled?: boolean",
+              "description": {
+                "summary": "Whether to fetch the form on mount",
+                "defaultValue": "true"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "interface",
+          "name": "UseFormResult",
+          "access": "public",
+          "description": null,
+          "declaration": "interface UseFormResult",
+          "properties": [
+            {
+              "name": "error",
+              "type": "string | null",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "error: string | null",
+              "description": {
+                "summary": "Error message if any"
+              }
+            },
+            {
+              "name": "form",
+              "type": "Form | null",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "form: Form | null",
+              "description": {
+                "summary": "The form configuration"
+              }
+            },
+            {
+              "name": "isLoading",
+              "type": "boolean",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "isLoading: boolean",
+              "description": {
+                "summary": "Loading state"
+              }
+            },
+            {
+              "name": "refetch",
+              "type": "() => Promise<void>",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "refetch: () => Promise<void>",
+              "description": {
+                "summary": "Manually refetch the form"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "interface",
+          "name": "UseFormSubmitOptions",
+          "access": "public",
+          "description": null,
+          "declaration": "interface UseFormSubmitOptions",
+          "properties": [
+            {
+              "name": "onError",
+              "type": "(error: string) => void",
+              "isStatic": false,
+              "access": "public",
+              "optional": true,
+              "declaration": "onError?: (error: string) => void",
+              "description": {
+                "summary": "Callback when submission fails"
+              }
+            },
+            {
+              "name": "onSuccess",
+              "type": "(submission: FormSubmission) => void",
+              "isStatic": false,
+              "access": "public",
+              "optional": true,
+              "declaration": "onSuccess?: (submission: FormSubmission) => void",
+              "description": {
+                "summary": "Callback when form is submitted successfully"
+              }
+            },
+            {
+              "name": "rateLimitMs",
+              "type": "number",
+              "isStatic": false,
+              "access": "public",
+              "optional": true,
+              "declaration": "rateLimitMs?: number",
+              "description": {
+                "summary": "Minimum time between submissions in milliseconds",
+                "defaultValue": "5000"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "interface",
+          "name": "UseFormSubmitResult",
+          "access": "public",
+          "description": null,
+          "declaration": "interface UseFormSubmitResult",
+          "properties": [
+            {
+              "name": "clearMessages",
+              "type": "() => void",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "clearMessages: () => void",
+              "description": {
+                "summary": "Clear error and success messages"
+              }
+            },
+            {
+              "name": "error",
+              "type": "string | null",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "error: string | null",
+              "description": {
+                "summary": "Error message if submission failed"
+              }
+            },
+            {
+              "name": "isRateLimited",
+              "type": "boolean",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "isRateLimited: boolean",
+              "description": {
+                "summary": "Whether the user is rate-limited from submitting"
+              }
+            },
+            {
+              "name": "isSubmitting",
+              "type": "boolean",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "isSubmitting: boolean",
+              "description": {
+                "summary": "Loading state during submission"
+              }
+            },
+            {
+              "name": "submitForm",
+              "type": "(projectId: string, formId: string, data: Record<string, string | boolean>) => Promise<FormSubmission | null>",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "submitForm: (projectId: string, formId: string, data: Record<string, string | boolean>) => Promise<FormSubmission | null>",
+              "description": {
+                "summary": "Submit the form"
+              }
+            },
+            {
+              "name": "successMessage",
+              "type": "string | null",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "successMessage: string | null",
+              "description": {
+                "summary": "Success message after submission"
+              }
+            }
+          ]
+        },
+        {
           "kind": "type",
           "name": "ArticleType",
           "access": "public",
@@ -11300,23 +11279,6 @@
         },
         {
           "kind": "type",
-          "name": "ContactFormFieldType",
-          "access": "public",
-          "description": {
-            "summary": "Contact Form Types\n\nConfigurable contact forms for collecting user submissions."
-          },
-          "declaration": "type ContactFormFieldType = 'text' | 'email' | 'textarea' | 'select' | 'radio' | 'checkbox'",
-          "values": [
-            "text",
-            "email",
-            "textarea",
-            "select",
-            "radio",
-            "checkbox"
-          ]
-        },
-        {
-          "kind": "type",
           "name": "FlowDisplayType",
           "access": "public",
           "description": null,
@@ -11326,6 +11288,23 @@
             "accordion",
             "decision_tree",
             "wizard"
+          ]
+        },
+        {
+          "kind": "type",
+          "name": "FormFieldType",
+          "access": "public",
+          "description": {
+            "summary": "Form Types\n\nConfigurable forms for collecting user submissions."
+          },
+          "declaration": "type FormFieldType = 'text' | 'email' | 'textarea' | 'select' | 'radio' | 'checkbox'",
+          "values": [
+            "text",
+            "email",
+            "textarea",
+            "select",
+            "radio",
+            "checkbox"
           ]
         },
         {
@@ -11508,9 +11487,9 @@
           "useBlogPost",
           "useBlogPosts",
           "useComments",
-          "useContactForm",
-          "useContactFormSubmit",
           "useFeaturedPosts",
+          "useForm",
+          "useFormSubmit",
           "useHelpArticle",
           "useHelpCenter",
           "useHelpFlow",
@@ -11536,7 +11515,7 @@
           "Button",
           "Card",
           "ChatScreen",
-          "ContactFormRenderer",
+          "FormRenderer",
           "HelpArticleCard",
           "HelpArticleDetail",
           "HelpCenter",
@@ -11696,28 +11675,28 @@
           "CommentAuthor",
           "CommentCreateInput",
           "CommentsResponse",
-          "ContactForm",
-          "ContactFormField",
-          "ContactFormRendererProps",
-          "ContactFormSubmission",
+          "Form",
+          "FormField",
+          "FormRendererProps",
+          "FormSubmission",
           "InputProps",
           "PaginatedResponse",
           "UseCommentsOptions",
           "UseCommentsResult",
-          "UseContactFormOptions",
-          "UseContactFormResult",
-          "UseContactFormSubmitOptions",
-          "UseContactFormSubmitResult",
           "UseFeaturedPostsOptions",
-          "UseFeaturedPostsResult"
+          "UseFeaturedPostsResult",
+          "UseFormOptions",
+          "UseFormResult",
+          "UseFormSubmitOptions",
+          "UseFormSubmitResult"
         ]
       },
       {
         "title": "Enums",
         "items": [
           "ArticleType",
-          "ContactFormFieldType",
           "FlowDisplayType",
+          "FormFieldType",
           "StatusState",
           "StatusType",
           "SupportRequestCategory",

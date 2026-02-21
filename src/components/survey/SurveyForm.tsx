@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import {
   View,
   Text,
@@ -6,17 +6,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Animated,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native'
-import { CheckCircle2, Circle, Star, ChevronDown, ChevronUp, Check } from 'lucide-react-native'
+import { CheckCircle2, Star, ChevronDown, ChevronUp, Check } from 'lucide-react-native'
 import { useAppgramTheme } from '../../provider'
 import { useSurvey, useSurveySubmit } from '../../hooks'
 import type { SurveyNode, SurveyAnswer } from '../../types'
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window')
 
 export interface SurveyFormProps {
   slug: string
@@ -26,11 +23,18 @@ export interface SurveyFormProps {
   onError?: (error: string) => void
 }
 
+interface AnswerState {
+  answer_text?: string
+  answer_options?: string[]
+  answer_rating?: number
+  answer?: boolean
+}
+
 /**
  * SurveyForm Component
  *
- * Interactive survey form with various question types (multiple choice, rating, text, etc.).
- * Supports step-by-step navigation and auto-advance.
+ * Interactive survey form with decision tree branching support.
+ * Supports yes/no branching, conditional branches, and result messages.
  *
  * @example
  * ```tsx
@@ -49,26 +53,33 @@ export interface SurveyFormProps {
  *   )
  * }
  * ```
- *
- * @example
- * ```tsx
- * // With auto-advance between questions
- * <SurveyForm
- *   slug="quick-poll"
- *   autoAdvance
- *   fingerprint={userId}
- * />
- * ```
  */
 export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = false, onSuccess, onError }: SurveyFormProps) {
   const { colors, radius, typography, spacing } = useAppgramTheme()
   const { survey, nodes, isLoading, error } = useSurvey(slug)
   const { isSubmitting, submitResponse } = useSurveySubmit({ onSuccess: () => onSuccess?.(), onError })
-  const [answers, setAnswers] = useState<Record<string, Partial<SurveyAnswer>>>({})
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [answers, setAnswers] = useState<Map<string, AnswerState>>(new Map())
+  const [visitedNodes, setVisitedNodes] = useState<string[]>([])
   const [submitted, setSubmitted] = useState(false)
   const fadeAnim = useRef(new Animated.Value(1)).current
   const slideAnim = useRef(new Animated.Value(0)).current
+
+  // Sort nodes and find root
+  const sortedNodes = useMemo(() => {
+    return [...nodes].sort((a, b) => a.sort_order - b.sort_order)
+  }, [nodes])
+
+  const rootNode = useMemo(() => {
+    return sortedNodes.find(n => n.parent_id === null) || sortedNodes[0]
+  }, [sortedNodes])
+
+  // Get current node from visitedNodes or root
+  const currentNodeId = visitedNodes.length > 0 ? visitedNodes[visitedNodes.length - 1] : rootNode?.id
+  const currentNode = nodes.find(n => n.id === currentNodeId) || null
+  const currentAnswer = currentNode ? answers.get(currentNode.id) : undefined
+
+  // Calculate progress based on visited nodes
+  const progress = nodes.length > 0 ? ((visitedNodes.length + 1) / nodes.length) * 100 : 0
 
   // Auto-close after submission
   useEffect(() => {
@@ -80,23 +91,70 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
     }
   }, [submitted, onSuccess])
 
-  const updateAnswer = (nodeId: string, value: Partial<SurveyAnswer>) => {
-    setAnswers(prev => ({ ...prev, [nodeId]: { ...prev[nodeId], ...value } }))
-  }
+  const updateAnswer = useCallback((nodeId: string, value: AnswerState) => {
+    setAnswers(prev => {
+      const next = new Map(prev)
+      next.set(nodeId, value)
+      return next
+    })
+  }, [])
 
-  const isLastQuestion = currentIndex === nodes.length - 1
-  const currentNode = nodes[currentIndex]
-  const currentAnswer = currentNode ? answers[currentNode.id] : null
-  const progress = nodes.length > 0 ? ((currentIndex + 1) / nodes.length) * 100 : 0
+  // Get next node based on branching logic
+  const getNextNode = useCallback((node: SurveyNode, answer: AnswerState): SurveyNode | null => {
+    // Yes/No legacy branching
+    if (node.question_type === 'yes_no') {
+      const isYes = answer.answer_text === 'yes' || answer.answer === true
+      const nextId = isYes ? node.answer_yes_node_id : node.answer_no_node_id
+      if (nextId) {
+        return nodes.find(n => n.id === nextId) || null
+      }
+    }
 
-  const hasAnswer = () => {
+    // Branch-based routing
+    if (node.branches && node.branches.length > 0) {
+      for (const branch of node.branches) {
+        const { condition } = branch
+        let matches = false
+
+        if (condition.type === 'equals') {
+          if (answer.answer_text !== undefined) matches = answer.answer_text === String(condition.value)
+          if (answer.answer_rating !== undefined) matches = answer.answer_rating === Number(condition.value)
+          if (answer.answer_options?.length === 1) matches = answer.answer_options[0] === String(condition.value)
+        } else if (condition.type === 'contains') {
+          if (answer.answer_text) matches = answer.answer_text.includes(String(condition.value))
+          if (answer.answer_options) matches = answer.answer_options.includes(String(condition.value))
+        } else if (condition.type === 'gt' && answer.answer_rating !== undefined) {
+          matches = answer.answer_rating > Number(condition.value)
+        } else if (condition.type === 'lt' && answer.answer_rating !== undefined) {
+          matches = answer.answer_rating < Number(condition.value)
+        } else if (condition.type === 'gte' && answer.answer_rating !== undefined) {
+          matches = answer.answer_rating >= Number(condition.value)
+        } else if (condition.type === 'lte' && answer.answer_rating !== undefined) {
+          matches = answer.answer_rating <= Number(condition.value)
+        }
+
+        if (matches) {
+          return nodes.find(n => n.id === branch.next_node_id) || null
+        }
+      }
+    }
+
+    // Default next node
+    if (node.next_node_id) {
+      return nodes.find(n => n.id === node.next_node_id) || null
+    }
+
+    return null
+  }, [nodes])
+
+  const hasAnswer = useCallback((): boolean => {
     if (!currentNode || !currentAnswer) return false
     switch (currentNode.question_type) {
       case 'short_answer':
       case 'paragraph':
         return !!currentAnswer.answer_text?.trim()
       case 'yes_no':
-        return currentAnswer.answer !== undefined
+        return currentAnswer.answer !== undefined || currentAnswer.answer_text !== undefined
       case 'multiple_choice':
         return (currentAnswer.answer_options?.length || 0) > 0
       case 'checkboxes':
@@ -106,7 +164,7 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
       default:
         return false
     }
-  }
+  }, [currentNode, currentAnswer])
 
   const canProceed = !currentNode?.is_required || hasAnswer()
 
@@ -127,52 +185,45 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
     })
   }
 
-  const goNext = () => {
-    if (currentIndex < nodes.length - 1 && canProceed) {
-      animateTransition('next', () => setCurrentIndex(i => i + 1))
-    }
-  }
-
-  const goPrev = () => {
-    if (currentIndex > 0) {
-      animateTransition('prev', () => setCurrentIndex(i => i - 1))
-    }
-  }
-
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!survey) return
-    const formattedAnswers = Object.entries(answers).map(([nodeId, answer]) => ({
+    const answerEntries = Array.from(answers.entries()).map(([nodeId, ans]) => ({
       node_id: nodeId,
-      ...answer,
+      answer: ans.answer,
+      answer_text: ans.answer_text,
+      answer_options: ans.answer_options,
+      answer_rating: ans.answer_rating,
     }))
-    const result = await submitResponse(survey.id, { fingerprint, answers: formattedAnswers })
+    const result = await submitResponse(survey.id, { fingerprint, answers: answerEntries })
     if (result) setSubmitted(true)
-  }
+  }, [survey, answers, submitResponse, fingerprint])
 
-  const allRequiredAnswered = () => {
-    return nodes.every(node => {
-      if (!node.is_required) return true
-      const answer = answers[node.id]
-      if (!answer) return false
-      switch (node.question_type) {
-        case 'short_answer':
-        case 'paragraph':
-          return !!answer.answer_text?.trim()
-        case 'yes_no':
-          return answer.answer !== undefined
-        case 'multiple_choice':
-        case 'checkboxes':
-          return (answer.answer_options?.length || 0) > 0
-        case 'rating':
-          return (answer.answer_rating || 0) > 0
-        default:
-          return false
-      }
-    })
-  }
+  const goNext = useCallback(() => {
+    if (!currentNode || !canProceed) return
+
+    const answer = answers.get(currentNode.id)
+    const nextNode = answer ? getNextNode(currentNode, answer) : null
+
+    if (nextNode) {
+      animateTransition('next', () => {
+        setVisitedNodes(prev => [...prev, nextNode.id])
+      })
+    } else {
+      // No next node — submit the survey
+      handleSubmit()
+    }
+  }, [currentNode, canProceed, answers, getNextNode, handleSubmit])
+
+  const goPrev = useCallback(() => {
+    if (visitedNodes.length > 0) {
+      animateTransition('prev', () => {
+        setVisitedNodes(prev => prev.slice(0, -1))
+      })
+    }
+  }, [visitedNodes.length])
 
   const renderQuestion = (node: SurveyNode) => {
-    const answer = answers[node.id] || {}
+    const answer = answers.get(node.id) || {}
 
     switch (node.question_type) {
       case 'short_answer':
@@ -220,12 +271,13 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
         return (
           <View style={{ flexDirection: 'row', gap: spacing.md, marginTop: spacing.xl }}>
             {['Yes', 'No'].map((opt, i) => {
-              const isSelected = answer.answer === (opt === 'Yes')
+              const optValue = opt.toLowerCase()
+              const isSelected = answer.answer_text === optValue || answer.answer === (opt === 'Yes')
               return (
                 <TouchableOpacity
                   key={opt}
                   onPress={() => {
-                    updateAnswer(node.id, { answer: opt === 'Yes' })
+                    updateAnswer(node.id, { answer_text: optValue, answer: opt === 'Yes' })
                     if (autoAdvance) setTimeout(goNext, 300)
                   }}
                   style={{
@@ -401,6 +453,20 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
 
   if (!survey || nodes.length === 0) return null
 
+  // Show result message if current node has one (terminal node)
+  if (currentNode?.result_message) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl }}>
+        <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primary + '20', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg }}>
+          <CheckCircle2 size={40} color={colors.primary} />
+        </View>
+        <Text style={{ fontSize: typography['2xl'], fontWeight: '700', color: colors.foreground, marginBottom: spacing.sm, textAlign: 'center' }}>
+          {currentNode.result_message}
+        </Text>
+      </View>
+    )
+  }
+
   if (submitted) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl }}>
@@ -417,6 +483,8 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
     )
   }
 
+  if (!currentNode) return null
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -424,12 +492,12 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
     >
       {/* Progress Bar */}
       <View style={{ height: 4, backgroundColor: colors.muted }}>
-        <View style={{ height: 4, backgroundColor: colors.primary, width: `${progress}%` }} />
+        <View style={{ height: 4, backgroundColor: colors.primary, width: `${Math.min(progress, 100)}%` }} />
       </View>
 
       {/* Question Content */}
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: spacing.xl }}
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: spacing.xl, paddingHorizontal: spacing.lg }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -437,21 +505,21 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
           {/* Question Number */}
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
             <Text style={{ fontSize: typography.sm, fontWeight: '600', color: colors.primary }}>
-              {currentIndex + 1}
+              {visitedNodes.length + 1}
             </Text>
             <Text style={{ fontSize: typography.sm, color: colors.mutedForeground }}>
-              {' '}→ {nodes.length}
+              {' '}/ {nodes.length}
             </Text>
           </View>
 
           {/* Question Text */}
           <Text style={{ fontSize: typography['2xl'], fontWeight: '600', color: colors.foreground, lineHeight: 32 }}>
-            {currentNode?.question}
-            {currentNode?.is_required && <Text style={{ color: colors.primary }}> *</Text>}
+            {currentNode.question}
+            {currentNode.is_required && <Text style={{ color: colors.primary }}> *</Text>}
           </Text>
 
           {/* Question Input */}
-          {currentNode && renderQuestion(currentNode)}
+          {renderQuestion(currentNode)}
         </Animated.View>
       </ScrollView>
 
@@ -468,7 +536,7 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
         <View style={{ flexDirection: 'row', gap: spacing.xs }}>
           <TouchableOpacity
             onPress={goPrev}
-            disabled={currentIndex === 0}
+            disabled={visitedNodes.length === 0}
             style={{
               width: 44,
               height: 44,
@@ -476,14 +544,14 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
               backgroundColor: colors.muted,
               alignItems: 'center',
               justifyContent: 'center',
-              opacity: currentIndex === 0 ? 0.4 : 1,
+              opacity: visitedNodes.length === 0 ? 0.4 : 1,
             }}
           >
             <ChevronUp size={20} color={colors.foreground} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={goNext}
-            disabled={!canProceed || isLastQuestion}
+            disabled={!canProceed}
             style={{
               width: 44,
               height: 44,
@@ -491,7 +559,7 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
               backgroundColor: colors.muted,
               alignItems: 'center',
               justifyContent: 'center',
-              opacity: !canProceed || isLastQuestion ? 0.4 : 1,
+              opacity: !canProceed ? 0.4 : 1,
             }}
           >
             <ChevronDown size={20} color={colors.foreground} />
@@ -499,48 +567,31 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
         </View>
 
         {/* OK / Submit Button */}
-        {isLastQuestion ? (
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={isSubmitting || !allRequiredAnswered()}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.sm,
-              backgroundColor: colors.primary,
-              paddingHorizontal: spacing.lg,
-              paddingVertical: spacing.md,
-              borderRadius: radius.md,
-              opacity: isSubmitting || !allRequiredAnswered() ? 0.5 : 1,
-            }}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color="#FFF" size="small" />
-            ) : (
-              <>
-                <Text style={{ fontSize: typography.base, fontWeight: '600', color: '#FFF' }}>Submit</Text>
-                <Check size={18} color="#FFF" strokeWidth={3} />
-              </>
-            )}
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            onPress={goNext}
-            disabled={!canProceed}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.sm,
-              backgroundColor: canProceed ? colors.primary : colors.muted,
-              paddingHorizontal: spacing.lg,
-              paddingVertical: spacing.md,
-              borderRadius: radius.md,
-            }}
-          >
-            <Text style={{ fontSize: typography.base, fontWeight: '600', color: canProceed ? '#FFF' : colors.mutedForeground }}>OK</Text>
-            <Check size={18} color={canProceed ? '#FFF' : colors.mutedForeground} strokeWidth={3} />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          onPress={goNext}
+          disabled={!canProceed || isSubmitting}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.sm,
+            backgroundColor: canProceed ? colors.primary : colors.muted,
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.md,
+            borderRadius: radius.md,
+            opacity: isSubmitting ? 0.5 : 1,
+          }}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator color="#FFF" size="small" />
+          ) : (
+            <>
+              <Text style={{ fontSize: typography.base, fontWeight: '600', color: canProceed ? '#FFF' : colors.mutedForeground }}>
+                OK
+              </Text>
+              <Check size={18} color={canProceed ? '#FFF' : colors.mutedForeground} strokeWidth={3} />
+            </>
+          )}
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   )
