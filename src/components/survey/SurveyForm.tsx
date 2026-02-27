@@ -151,10 +151,19 @@ export function SurveyForm({ slug, fingerprint = 'anonymous', autoAdvance = fals
       return null
     }
 
-    // Tree-based routing: find child node (node whose parent_id equals this node's id)
-    const childNode = nodes.find(n => n.parent_id === node.id)
-    if (childNode) {
-      return childNode
+    // Tree-based routing: find child nodes (nodes whose parent_id equals this node's id)
+    const childNodes = nodes
+      .filter(n => n.parent_id === node.id)
+      .sort((a, b) => a.sort_order - b.sort_order)
+
+    if (childNodes.length > 0) {
+      // For yes/no questions with exactly 2 children, use sort_order convention:
+      // sort_order 0 = YES path, sort_order 1 = NO path
+      if (node.question_type === 'yes_no' && childNodes.length === 2 && answer) {
+        const isYes = answer.answer_text === 'yes' || answer.answer === true
+        return isYes ? childNodes[0] : childNodes[1]
+      }
+      return childNodes[0]
     }
 
     return null

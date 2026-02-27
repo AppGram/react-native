@@ -4,4 +4,4 @@
  * Components for in-app chat and messaging.
  */
 
-export { ChatScreen, type ChatScreenProps } from './ChatScreen'
+export { ChatScreen, type ChatScreenProps, type ChatSource } from './ChatScreen'

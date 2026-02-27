@@ -89,6 +89,7 @@ export {
 export {
   ChatScreen,
   type ChatScreenProps,
+  type ChatSource,
 } from './chat'
 
 // Blog components
