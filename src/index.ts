@@ -184,6 +184,7 @@ export {
   // Chat components
   ChatScreen,
   type ChatScreenProps,
+  type ChatSource,
   // Blog components
   Blog,
   BlogList,

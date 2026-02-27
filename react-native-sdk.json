@@ -4,7 +4,7 @@
     "sdkName": "@appgram/react-native",
     "platform": "react-native",
     "language": "TypeScript",
-    "generatedAt": "2026-02-21T21:34:09.450Z"
+    "generatedAt": "2026-02-24T21:05:28.247Z"
   },
   "modules": [
     {
@@ -1637,8 +1637,8 @@
           "name": "SurveyForm",
           "access": "public",
           "description": {
-            "summary": "SurveyForm Component\n\nInteractive survey form with various question types (multiple choice, rating, text, etc.).\nSupports step-by-step navigation and auto-advance.",
-            "example": "// With auto-advance between questions\n<SurveyForm\n  slug=\"quick-poll\"\n  autoAdvance\n  fingerprint={userId}\n/>"
+            "summary": "SurveyForm Component\n\nInteractive survey form with decision tree branching support.\nSupports yes/no branching, conditional branches, and result messages.",
+            "example": "import { SurveyForm } from '@appgram/react-native'\n\nfunction SurveyScreen() {\n  return (\n    <SurveyForm\n      slug=\"customer-satisfaction\"\n      onSuccess={() => {\n        Alert.alert('Thank you!', 'Your feedback has been recorded.')\n        navigation.goBack()\n      }}\n      onError={(error) => Alert.alert('Error', error)}\n    />\n  )\n}"
           },
           "declaration": "function SurveyForm(props: SurveyFormProps): Element | null",
           "parameters": [
@@ -8547,13 +8547,14 @@
             },
             {
               "name": "onArticlePress",
-              "type": "(slug: string, articleId: string) => void",
+              "type": "(slug: string, source: ChatSource) => void",
               "isStatic": false,
               "access": "public",
               "optional": true,
-              "declaration": "onArticlePress?: (slug: string, articleId: string) => void",
+              "declaration": "onArticlePress?: (slug: string, source: ChatSource) => void",
               "description": {
-                "summary": "Callback when an article source is tapped"
+                "summary": "Callback when an article source is tapped.\nProvides the article slug and full source data for flexible routing.",
+                "example": "// Simple slug-based routing\nonArticlePress={(slug) => navigation.navigate('HelpArticle', { slug })}\n\n// Using flow context for nested routes\nonArticlePress={(slug, source) => {\n  if (source.flow_slug) {\n    navigation.navigate('HelpArticle', { flowSlug: source.flow_slug, slug })\n  } else {\n    navigation.navigate('HelpArticle', { slug })\n  }\n}}"
               }
             },
             {
@@ -8609,6 +8610,80 @@
               "declaration": "subtitle?: string",
               "description": {
                 "summary": "Subtitle shown below greeting"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "interface",
+          "name": "ChatSource",
+          "access": "public",
+          "description": null,
+          "declaration": "interface ChatSource",
+          "properties": [
+            {
+              "name": "article_id",
+              "type": "string",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "article_id: string",
+              "description": null
+            },
+            {
+              "name": "flow_id",
+              "type": "string",
+              "isStatic": false,
+              "access": "public",
+              "optional": true,
+              "declaration": "flow_id?: string",
+              "description": null
+            },
+            {
+              "name": "flow_slug",
+              "type": "string",
+              "isStatic": false,
+              "access": "public",
+              "optional": true,
+              "declaration": "flow_slug?: string",
+              "description": null
+            },
+            {
+              "name": "similarity",
+              "type": "number",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "similarity: number",
+              "description": null
+            },
+            {
+              "name": "slug",
+              "type": "string",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "slug: string",
+              "description": null
+            },
+            {
+              "name": "title",
+              "type": "string",
+              "isStatic": false,
+              "access": "public",
+              "optional": false,
+              "declaration": "title: string",
+              "description": null
+            },
+            {
+              "name": "type",
+              "type": "'help_article' | 'blog_post'",
+              "isStatic": false,
+              "access": "public",
+              "optional": true,
+              "declaration": "type?: 'help_article' | 'blog_post'",
+              "description": {
+                "summary": "Source type - determines routing behavior"
               }
             }
           ]
@@ -11671,6 +11746,7 @@
           "CardProps",
           "Category",
           "ChatScreenProps",
+          "ChatSource",
           "Comment",
           "CommentAuthor",
           "CommentCreateInput",

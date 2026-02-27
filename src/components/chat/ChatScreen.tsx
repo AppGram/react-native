@@ -15,11 +15,15 @@ import { Send, FileText, LifeBuoy } from 'lucide-react-native'
 import Markdown from 'react-native-markdown-display'
 import { useAppgramContext, useAppgramTheme } from '../../provider'
 
-interface ChatSource {
+export interface ChatSource {
   article_id: string
   title: string
   slug: string
   similarity: number
+  flow_slug?: string
+  flow_id?: string
+  /** Source type - determines routing behavior */
+  type?: 'help_article' | 'blog_post'
 }
 
 interface ChatMessage {
@@ -47,8 +51,26 @@ export interface ChatScreenProps {
   options?: QuickOption[]
   /** Accent color override */
   accentColor?: string
-  /** Callback when an article source is tapped */
-  onArticlePress?: (slug: string, articleId: string) => void
+  /**
+   * Callback when an article source is tapped.
+   * Provides the article slug and full source data for flexible routing.
+   *
+   * @example
+   * ```tsx
+   * // Simple slug-based routing
+   * onArticlePress={(slug) => navigation.navigate('HelpArticle', { slug })}
+   *
+   * // Using flow context for nested routes
+   * onArticlePress={(slug, source) => {
+   *   if (source.flow_slug) {
+   *     navigation.navigate('HelpArticle', { flowSlug: source.flow_slug, slug })
+   *   } else {
+   *     navigation.navigate('HelpArticle', { slug })
+   *   }
+   * }}
+   * ```
+   */
+  onArticlePress?: (slug: string, source: ChatSource) => void
   /** Callback when support button is tapped */
   onSupportPress?: () => void
   /** Custom style for container */
@@ -211,7 +233,7 @@ export function ChatScreen({
   }
 
   const handleSourcePress = (source: ChatSource) => {
-    onArticlePress?.(source.slug, source.article_id)
+    onArticlePress?.(source.slug, source)
   }
 
   const renderMessage: ListRenderItem<ChatMessage> = ({ item }) => {
