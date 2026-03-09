@@ -618,3 +618,11 @@ import type {
 ## License
 
 MIT
+
+## Skill install (skills.sh)
+
+Want to reuse this SDK as a Codex/skills.sh skill? The skill lives at `skills/appgram-react-native-sdk`.
+
+- Local install from this repo: `npx skills add . --skill appgram-react-native-sdk`
+- From GitHub: `npx skills add https://github.com/<owner>/<repo> --skill appgram-react-native-sdk`
+- Peer deps required in consuming projects: `@react-native-async-storage/async-storage`, `lucide-react-native`, `react-native-svg`, `react-native-markdown-display`, `react-native-render-html` (install after `@appgram/react-native`; run `npx pod-install` for iOS).

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Appgram RN SDK"
+  short_description: "Use and maintain the Appgram React Native SDK."
+  default_prompt: "Use when integrating or maintaining @appgram/react-native: install peers, wrap AppgramProvider, pick components/hooks, theme overrides, and run lint/build/docs tasks."
