@@ -19,8 +19,12 @@ import type {
   HelpCollection,
   HelpFlow,
   HelpArticle,
+  SupportAttachment,
+  SupportMessageInput,
+  SupportMessageResponse,
   SupportRequest,
   SupportRequestInput,
+  SupportUploadFile,
   Survey,
   SurveyNode,
   SurveyResponse,
@@ -481,7 +485,7 @@ export class AppgramClient {
   /**
    * Upload a file via public portal (no auth required)
    */
-  async uploadFile(file: File): Promise<ApiResponse<{
+  async uploadFile(file: SupportUploadFile): Promise<ApiResponse<{
     url: string
     name: string
     size: number
@@ -489,7 +493,15 @@ export class AppgramClient {
   }>> {
     const url = `${this.baseUrl}/portal/files/upload`
     const formData = new FormData()
-    formData.append('file', file)
+    const formFile = file.uri
+      ? {
+          uri: file.uri,
+          name: file.name,
+          type: file.type || file.mime_type || 'application/octet-stream',
+        }
+      : file
+
+    formData.append('file', formFile as Parameters<FormData['append']>[1])
     formData.append('project_id', this.projectId)
 
     try {
@@ -525,42 +537,65 @@ export class AppgramClient {
     }
   }
 
+  private async uploadSupportAttachments(
+    attachments?: SupportUploadFile[]
+  ): Promise<ApiResponse<SupportAttachment[]>> {
+    const uploadedAttachments: SupportAttachment[] = []
+
+    if (!attachments || attachments.length === 0) {
+      return {
+        success: true,
+        data: uploadedAttachments,
+      }
+    }
+
+    for (const file of attachments) {
+      if (typeof file.size === 'number' && file.size > 10 * 1024 * 1024) {
+        return {
+          success: false,
+          error: {
+            code: 'FILE_TOO_LARGE',
+            message: `File "${file.name}" is too large. Maximum size is 10MB.`,
+          },
+        }
+      }
+
+      const uploadResponse = await this.uploadFile(file)
+      if (uploadResponse.success && uploadResponse.data) {
+        uploadedAttachments.push({
+          url: uploadResponse.data.url,
+          name: uploadResponse.data.name || file.name,
+          size: uploadResponse.data.size ?? file.size ?? 0,
+          mime_type: uploadResponse.data.mime_type || file.mime_type || file.type,
+        })
+      } else {
+        return {
+          success: false,
+          error: uploadResponse.error || {
+            code: 'UPLOAD_ERROR',
+            message: 'Failed to upload attachment',
+          },
+        }
+      }
+    }
+
+    return {
+      success: true,
+      data: uploadedAttachments,
+    }
+  }
+
   /**
    * Submit a support request
    */
   async submitSupportRequest(
     data: SupportRequestInput
   ): Promise<ApiResponse<SupportRequest>> {
-    // Upload attachments first if any
-    const uploadedAttachments: Array<{ url: string; name: string; size: number; mime_type?: string }> = []
-    if (data.attachments && data.attachments.length > 0) {
-      for (const file of data.attachments) {
-        if (file.size > 10 * 1024 * 1024) {
-          return {
-            success: false,
-            error: {
-              code: 'FILE_TOO_LARGE',
-              message: `File "${file.name}" is too large. Maximum size is 10MB.`,
-            },
-          }
-        }
-        const uploadResponse = await this.uploadFile(file)
-        if (uploadResponse.success && uploadResponse.data) {
-          uploadedAttachments.push({
-            url: uploadResponse.data.url,
-            name: uploadResponse.data.name,
-            size: uploadResponse.data.size,
-            mime_type: uploadResponse.data.mime_type,
-          })
-        } else {
-          return {
-            success: false,
-            error: uploadResponse.error || {
-              code: 'UPLOAD_ERROR',
-              message: 'Failed to upload attachment',
-            },
-          }
-        }
+    const attachmentsResponse = await this.uploadSupportAttachments(data.attachments)
+    if (!attachmentsResponse.success) {
+      return {
+        success: false,
+        error: attachmentsResponse.error,
       }
     }
 
@@ -574,7 +609,9 @@ export class AppgramClient {
     if (data.user_name) payload.user_name = data.user_name
     if (data.external_user_id) payload.external_user_id = data.external_user_id
     if (data.category) payload.category = data.category
-    if (uploadedAttachments.length > 0) payload.attachments = uploadedAttachments
+    if (attachmentsResponse.data && attachmentsResponse.data.length > 0) {
+      payload.attachments = attachmentsResponse.data
+    }
 
     return this.post<SupportRequest>('/portal/support-requests', payload)
   }
@@ -623,11 +660,32 @@ export class AppgramClient {
   async addSupportMessage(
     ticketId: string,
     token: string,
-    content: string
-  ): Promise<ApiResponse<{ id: string; content: string; created_at: string }>> {
-    return this.post<{ id: string; content: string; created_at: string }>(
+    contentOrData: string | SupportMessageInput,
+    attachments?: SupportUploadFile[]
+  ): Promise<ApiResponse<SupportMessageResponse>> {
+    const messageData: SupportMessageInput = typeof contentOrData === 'string'
+      ? { content: contentOrData, attachments }
+      : contentOrData
+
+    const attachmentsResponse = await this.uploadSupportAttachments(messageData.attachments)
+    if (!attachmentsResponse.success) {
+      return {
+        success: false,
+        error: attachmentsResponse.error,
+      }
+    }
+
+    const payload: Record<string, unknown> = {
+      content: messageData.content,
+    }
+
+    if (attachmentsResponse.data && attachmentsResponse.data.length > 0) {
+      payload.attachments = attachmentsResponse.data
+    }
+
+    return this.post<SupportMessageResponse>(
       `/portal/support-requests/${ticketId}/messages?token=${encodeURIComponent(token)}`,
-      { content }
+      payload
     )
   }
 

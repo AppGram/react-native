@@ -424,18 +424,31 @@ const { article, isLoading } = useHelpArticle('reset-password', 'account-help')
 
 ### useSupport
 
-Submit support tickets.
+Submit support tickets and reply to existing support threads.
 
 ```tsx
 import { useSupport } from '@appgram/react-native'
 
-const { submitTicket, isSubmitting, error, successMessage } = useSupport()
+const { submitTicket, submitMessage, isSubmitting, isSubmittingMessage, error, successMessage } = useSupport()
+
+const attachment = {
+  uri: 'file:///path/to/screenshot.png',
+  name: 'screenshot.png',
+  type: 'image/png',
+  size: 102400,
+}
 
 await submitTicket({
   subject: 'Help needed',
   description: 'I have a question...',
   user_email: 'user@example.com',
   user_name: 'John',
+  attachments: [attachment],
+})
+
+await submitMessage('ticket-id', 'magic-link-token', {
+  content: 'Here is the screenshot from the thread.',
+  attachments: [attachment],
 })
 ```
 

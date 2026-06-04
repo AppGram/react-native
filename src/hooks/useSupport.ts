@@ -81,7 +81,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useAppgramContext } from '../provider'
 import { getErrorMessage } from '../utils'
-import type { SupportRequest, SupportRequestCategory } from '../types'
+import type {
+  SupportMessageInput,
+  SupportMessageResponse,
+  SupportRequest,
+  SupportRequestCategory,
+  SupportUploadFile,
+} from '../types'
 
 const STORAGE_KEY = '@appgram/support_tickets'
 
@@ -163,6 +169,11 @@ export interface SupportSubmitData {
    * Ticket category (optional)
    */
   category?: SupportRequestCategory
+
+  /**
+   * Files to upload and attach to the support ticket
+   */
+  attachments?: SupportUploadFile[]
 }
 
 export interface UseSupportOptions {
@@ -185,9 +196,25 @@ export interface UseSupportResult {
   submitTicket: (data: SupportSubmitData) => Promise<SupportRequest | null>
 
   /**
+   * Submit a message to an existing support ticket thread
+   * @returns The created message or null if failed
+   */
+  submitMessage: (
+    ticketId: string,
+    token: string,
+    data: string | SupportMessageInput,
+    attachments?: SupportUploadFile[]
+  ) => Promise<SupportMessageResponse | null>
+
+  /**
    * Loading state during submission
    */
   isSubmitting: boolean
+
+  /**
+   * Loading state while submitting a thread message
+   */
+  isSubmittingMessage: boolean
 
   /**
    * Error message if any operation failed
@@ -245,6 +272,7 @@ export interface UseSupportResult {
 export function useSupport(options: UseSupportOptions = {}): UseSupportResult {
   const { client } = useAppgramContext()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmittingMessage, setIsSubmittingMessage] = useState(false)
   const [isSendingMagicLink, setIsSendingMagicLink] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -357,6 +385,7 @@ export function useSupport(options: UseSupportOptions = {}): UseSupportResult {
         user_name: data.user_name,
         external_user_id: data.external_user_id,
         category: data.category,
+        attachments: data.attachments,
       })
 
       if (response.success && response.data) {
@@ -381,6 +410,38 @@ export function useSupport(options: UseSupportOptions = {}): UseSupportResult {
       setIsSubmitting(false)
     }
   }, [client, options, saveTicket])
+
+  const submitMessage = useCallback(async (
+    ticketId: string,
+    token: string,
+    data: string | SupportMessageInput,
+    attachments?: SupportUploadFile[]
+  ): Promise<SupportMessageResponse | null> => {
+    setIsSubmittingMessage(true)
+    setError(null)
+    setSuccessMessage(null)
+
+    try {
+      const response = await client.addSupportMessage(ticketId, token, data, attachments)
+
+      if (response.success && response.data) {
+        setSuccessMessage('Support message submitted successfully')
+        return response.data
+      } else {
+        const errorMsg = getErrorMessage(response.error, 'Failed to submit message')
+        setError(errorMsg)
+        options.onError?.(errorMsg)
+        return null
+      }
+    } catch (err) {
+      const errorMsg = getErrorMessage(err, 'An error occurred')
+      setError(errorMsg)
+      options.onError?.(errorMsg)
+      return null
+    } finally {
+      setIsSubmittingMessage(false)
+    }
+  }, [client, options])
 
   const requestMagicLink = useCallback(async (email: string): Promise<boolean> => {
     setIsSendingMagicLink(true)
@@ -435,7 +496,9 @@ export function useSupport(options: UseSupportOptions = {}): UseSupportResult {
 
   return {
     submitTicket,
+    submitMessage,
     isSubmitting,
+    isSubmittingMessage,
     error,
     successMessage,
     clearMessages,

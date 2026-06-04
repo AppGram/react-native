@@ -29,7 +29,8 @@ Each hook is headless: returns data, `isLoading`, often `error`, `refetch`, plus
 
 ## Support & Forms
 - `useSupport({ onSuccess?, onError? }?)`
-  - Returns submission + auth helpers: `{ submitTicket(data), isSubmitting, error, successMessage, clearMessages, requestMagicLink(email), isSendingMagicLink, verifyToken(token), isVerifying, storedTickets, loadStoredTickets, clearStoredTickets }`
+  - Returns submission + auth helpers: `{ submitTicket(data), submitMessage(ticketId, token, data, attachments?), isSubmitting, isSubmittingMessage, error, successMessage, clearMessages, requestMagicLink(email), isSendingMagicLink, verifyToken(token), isVerifying, storedTickets, loadStoredTickets, clearStoredTickets }`
+  - `submitTicket` and `submitMessage` accept `attachments?: SupportUploadFile[]`; `SupportUploadFile` supports React Native `{ uri, name, type?, size? }`.
   - Stores last 50 tickets in AsyncStorage (fallback to in-memory).
 - `useForm(formId, { refreshInterval?, skip? }?)`
   - `{ form, isLoading, error, refetch }`
