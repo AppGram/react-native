@@ -31,12 +31,12 @@ Get client: `const { client } = useAppgramContext()`. Methods return `ApiRespons
 - `getHelpArticle(slug, flowId)`
 
 ## Support
-- `uploadFile(file)` → size limit 10MB; returns `{ url, name, size, mime_type? }`.
+- `uploadFile(file: SupportUploadFile)` → size limit 10MB; accepts React Native `{ uri, name, type?, size? }`; returns `{ url, name, size, mime_type? }`.
 - `submitSupportRequest(data: SupportRequestInput)`; auto-uploads attachments first.
 - `sendSupportMagicLink(email)`
 - `verifySupportToken(token)` → `{ tickets, user_email }`
 - `getSupportTicket(ticketId, token)`
-- `addSupportMessage(ticketId, token, content)`
+- `addSupportMessage(ticketId, token, content, attachments?)` or `addSupportMessage(ticketId, token, { content, attachments })`; auto-uploads thread attachments first.
 
 ## Status
 - `getPublicStatusOverview(slug = 'status')`

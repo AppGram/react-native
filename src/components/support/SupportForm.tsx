@@ -13,7 +13,7 @@ import {
 } from 'react-native'
 import { Send, Search, MessageSquare, HelpCircle, CheckCircle2, Mail, Ticket, ExternalLink } from 'lucide-react-native'
 import { useAppgramTheme, useAppgramContext } from '../../provider'
-import { useSupport, useForm } from '../../hooks'
+import { useSupport, useForm, type StoredTicket } from '../../hooks'
 import type { SupportRequestCategory, SupportRequest, Form, FormField } from '../../types'
 
 export interface SupportFormProps {
@@ -57,6 +57,8 @@ export interface SupportFormProps {
   onCheckStatus?: (email: string) => void
   /** Callback when a ticket is clicked */
   onTicketClick?: (ticket: SupportRequest) => void
+  /** Callback when a locally stored recent ticket is clicked */
+  onStoredTicketClick?: (ticket: StoredTicket) => void
 }
 
 const categoryOptions: { value: SupportRequestCategory; label: string }[] = [
@@ -133,7 +135,7 @@ export function SupportForm({
   onSuccess,
   onError,
   onCheckStatus,
-  onTicketClick,
+  onStoredTicketClick,
 }: SupportFormProps): React.ReactElement {
   const { colors, radius, typography, spacing } = useAppgramTheme()
   const { client } = useAppgramContext()
@@ -755,7 +757,13 @@ export function SupportForm({
                   return (
                     <TouchableOpacity
                       key={ticket.id}
-                      onPress={() => openTicketLink(ticket.magic_link)}
+                      onPress={() => {
+                        if (onStoredTicketClick) {
+                          onStoredTicketClick(ticket)
+                        } else {
+                          openTicketLink(ticket.magic_link)
+                        }
+                      }}
                       style={{
                         backgroundColor: colors.muted,
                         borderRadius: radius.md,

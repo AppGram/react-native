@@ -87,7 +87,7 @@ return (
 
 ## Common recipes
 - **Custom vote button:** use `useVote`; pass `onVote` to sync local counts; guard for missing fingerprint by showing a prompt to enable cookies/storage.
-- **Support with magic link:** use `useSupport`; call `requestMagicLink(email)` then `verifyToken(token)`; tickets also saved locally (`storedTickets`, `clearStoredTickets`).
+- **Support with magic link:** use `useSupport`; call `requestMagicLink(email)` then `verifyToken(token)`; tickets also saved locally (`storedTickets`, `clearStoredTickets`). Use `submitMessage(ticketId, token, { content, attachments })` to reply in a thread with uploaded files.
 - **Embed changelog tab:** stack navigator screen with `Releases`; on press, navigate to detail screen wrapping `ReleaseDetail`.
 - **Anonymous wishlist:** keep `enableFingerprinting` on (default); if privacy requires, set false and disable voting UI.
 - **Blog index + detail:** `BlogList` for landing; use `useBlogPosts` if you need infinite scroll; route to `BlogPostDetail` on press.

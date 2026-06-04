@@ -25,6 +25,14 @@ export interface SupportAttachment {
   mime_type?: string
 }
 
+export interface SupportUploadFile {
+  uri?: string
+  name: string
+  size?: number
+  type?: string
+  mime_type?: string
+}
+
 export interface SupportMessage {
   id: string
   support_request_id: string
@@ -34,6 +42,18 @@ export interface SupportMessage {
   author_name?: string | null
   content: string
   is_internal: boolean
+  attachments?: SupportAttachment[]
+  created_at: string
+}
+
+export interface SupportMessageInput {
+  content: string
+  attachments?: SupportUploadFile[]
+}
+
+export interface SupportMessageResponse {
+  id: string
+  content: string
   attachments?: SupportAttachment[]
   created_at: string
 }
@@ -64,7 +84,7 @@ export interface SupportRequestInput {
   user_name?: string
   external_user_id?: string
   category?: SupportRequestCategory
-  attachments?: File[]
+  attachments?: SupportUploadFile[]
 }
 
 export interface SupportRequestsResponse {
